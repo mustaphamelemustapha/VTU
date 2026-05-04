@@ -121,8 +121,16 @@ export default function BuyDataPage() {
         apiFetch('/data/plans'),
         apiFetch('/wallet/me'),
       ]);
-      if (plansRes.status === 'fulfilled') setPlans(Array.isArray(plansRes.value) ? plansRes.value : []);
+      
+      if (plansRes.status === 'fulfilled') {
+        const val = plansRes.value;
+        const list = Array.isArray(val) ? val : (val?.items || val?.data || val?.plans || []);
+        setPlans(Array.isArray(list) ? list : []);
+      }
+      
       if (walletRes.status === 'fulfilled') setWallet(walletRes.value);
+    } catch (err) {
+      console.error('Failed to load data:', err);
     } finally {
       setLoading(false);
     }

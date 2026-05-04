@@ -12,7 +12,12 @@ function normalizeBase(raw) {
 
 function getApiBase() {
   const env = typeof window !== 'undefined' ? window.__AXISVTU_API_BASE__ : undefined;
-  const candidate = normalizeBase(env || process.env.NEXT_PUBLIC_API_BASE || DEFAULT_API_BASE);
+  const candidate = normalizeBase(
+    env || 
+    process.env.NEXT_PUBLIC_API_BASE || 
+    process.env.NEXT_PUBLIC_API_BASE_URL || 
+    DEFAULT_API_BASE
+  );
   if (typeof window !== 'undefined' && window.location.protocol === 'https:' && candidate.startsWith('http://')) {
     return `https://${candidate.slice('http://'.length)}`;
   }
