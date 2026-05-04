@@ -184,7 +184,7 @@ export function AppShell({ children }) {
 
   return (
     <div className="axis-shell grid min-h-screen lg:grid-cols-[280px_minmax(0,1fr)]">
-      <aside className="hidden border-r border-border bg-card p-5 text-card-foreground lg:flex lg:flex-col">
+      <aside className="hidden border-r border-border bg-card p-5 text-card-foreground lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-y-auto">
         <Link href="/dashboard" className="flex items-center gap-3 rounded-2xl border border-border bg-secondary px-4 py-3">
           <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-card ring-1 ring-border">
             <img src="/brand/axisvtu-icon.png" alt="AxisVTU logo" className="h-full w-full object-contain" />

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, CircleDollarSign, Copy, Gift, Landmark, Package2, RefreshCw, Sparkles, TrendingUp, Users } from 'lucide-react';
+import { ArrowRight, Check, CircleDollarSign, Copy, Gift, Landmark, Package2, RefreshCw, Sparkles } from 'lucide-react';
 import { apiFetch, getProfile } from '@/lib/api';
 import { formatDateTime, formatMoney } from '@/lib/format';
 import { quickActions } from '@/lib/nav';
@@ -100,10 +100,8 @@ export default function DashboardPage() {
   const referralLink = buildReferralUrl(referrals?.referral_code || profile?.referral_code || '');
   const quickStats = useMemo(() => [
     { label: 'Wallet balance', value: `₦${formatMoney(wallet.balance || 0)}`, detail: 'Live available balance', icon: CircleDollarSign, tone: 'brand' },
-    { label: 'Total referrals', value: String(referrals?.total_referrals ?? 0), detail: 'Friends brought in', icon: Users, tone: 'emerald' },
     { label: 'Rewards earned', value: `₦${formatMoney(referrals?.total_earned ?? 0)}`, detail: 'Referral revenue', icon: Gift, tone: 'violet' },
-    { label: 'Recent tx', value: String(txs.length), detail: 'Latest transactions in view', icon: TrendingUp, tone: 'amber' },
-  ], [wallet.balance, referrals?.total_referrals, referrals?.total_earned, txs.length]);
+  ], [wallet.balance, referrals?.total_earned]);
 
   const copyFundingAccount = useCallback(async () => {
     const accountNumber = primaryFundingAccount?.account_number;
@@ -137,7 +135,7 @@ export default function DashboardPage() {
         )}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
         {quickStats.map((item) => (
           <MetricCard key={item.label} {...item} />
         ))}
@@ -159,7 +157,7 @@ export default function DashboardPage() {
           </div>
 
           {primaryFundingAccount ? (
-            <div className="rounded-3xl border border-border bg-card/85 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:min-w-[390px]">
+            <div className="w-full rounded-3xl border border-border bg-card/85 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:min-w-[390px] md:max-w-[520px]">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Account number</div>
@@ -179,13 +177,13 @@ export default function DashboardPage() {
                 </Button>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-secondary p-3">
+                <div className="min-w-0 rounded-2xl border border-border bg-secondary p-3">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Bank</div>
                   <div className="mt-1 text-sm font-semibold text-foreground">{primaryFundingAccount.bank_name || 'Bank account'}</div>
                 </div>
-                <div className="rounded-2xl border border-border bg-secondary p-3">
+                <div className="min-w-0 rounded-2xl border border-border bg-secondary p-3">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Account name</div>
-                  <div className="mt-1 truncate text-sm font-semibold text-foreground">{primaryFundingAccount.account_name || 'AxisVTU Wallet'}</div>
+                  <div className="mt-1 break-words text-sm font-semibold text-foreground">{primaryFundingAccount.account_name || 'AxisVTU Wallet'}</div>
                 </div>
               </div>
               <div className="mt-3 text-xs font-medium text-primary">
