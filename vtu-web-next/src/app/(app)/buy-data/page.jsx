@@ -13,22 +13,11 @@ import { cn } from '@/lib/utils';
 
 const NETWORK_ORDER = ['mtn', 'airtel', 'glo', '9mobile'];
 const NETWORK_TABS = [
-  { key: 'all', label: 'All networks' },
   { key: 'mtn', label: 'MTN' },
   { key: 'airtel', label: 'Airtel' },
   { key: 'glo', label: 'Glo' },
   { key: '9mobile', label: '9mobile' },
 ];
-
-const BLOCK_KEYWORDS = ['night', 'social', 'weekend', 'daily', 'awoof', 'bonus', 'router', 'mifi', 'youtube', 'unlimited'];
-const AIRTEL_VISIBLE_CAPACITIES = new Set(['2GB', '3GB', '4GB', '8GB', '10GB', '13GB', '18GB', '25GB']);
-
-function parsePlansResponse(raw) {
-  if (Array.isArray(raw)) return raw;
-  if (!raw || typeof raw !== 'object') return [];
-  const list = raw.data ?? raw.plans ?? raw.items;
-  return Array.isArray(list) ? list : [];
-}
 
 function normalizeNetwork(value) {
   const raw = String(value || '').trim().toLowerCase();
@@ -82,57 +71,12 @@ function planPrice(plan) {
   return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
 }
 
-function capacityKey(value) {
-  const text = String(value ?? '').toUpperCase().replace(/\s+/g, '');
-  if (!text) return '';
-  const match = text.match(/(\d+(?:\.\d+)?)(GB|MB)/);
-  return match ? `${match[1]}${match[2]}` : text;
-}
-
-function validityDays(value) {
-  const text = String(value ?? '').toLowerCase();
-  if (!text) return null;
-  const match = text.match(/(\d+)\s*(d|day|days|month|months|week|weeks)/);
-  if (!match) return null;
-  const amount = Number.parseInt(match[1] || '', 10);
-  if (!Number.isFinite(amount)) return null;
-  const unit = match[2] || '';
-  if (unit.startsWith('month')) return amount * 30;
-  if (unit.startsWith('week')) return amount * 7;
-  return amount;
-}
-
-function isNoisyPlan(plan) {
-  if (!plan || typeof plan !== 'object') return false;
-  const label = `${plan.plan_name || ''} ${plan.data_size || ''} ${plan.validity || ''}`.toLowerCase();
-  return BLOCK_KEYWORDS.some((keyword) => label.includes(keyword));
-}
-
 function normalizePlan(raw) {
   const plan = { ...(raw || {}) };
   plan.plan_name = sanitizePlanText(plan.plan_name);
   plan.data_size = sanitizePlanText(plan.data_size);
   plan.network = normalizeNetwork(plan.network || plan.provider || plan.plan_code || '');
-
-  if (!plan.network) {
-    const networkHint = String(plan.plan_name || plan.data_size || '').toLowerCase();
-    if (networkHint.includes('mtn')) plan.network = 'mtn';
-    else if (networkHint.includes('airtel')) plan.network = 'airtel';
-    else if (networkHint.includes('glo')) plan.network = 'glo';
-    else if (networkHint.includes('9mobile') || networkHint.includes('etisalat')) plan.network = '9mobile';
-  }
-
   return plan;
-}
-
-function filterAirtelPlans(plans) {
-  return plans.filter((plan) => {
-    const network = normalizeNetwork(plan.network);
-    if (network !== 'airtel') return true;
-    const capacity = capacityKey(plan.data_size || plan.plan_name);
-    if (!AIRTEL_VISIBLE_CAPACITIES.has(capacity)) return false;
-    return validityDays(plan.validity || plan.plan_name) === 30;
-  });
 }
 
 function curatePlans(rows) {
@@ -146,20 +90,15 @@ function curatePlans(rows) {
   }
 
   const curatedGroups = [];
-  for (const networkKey of [...NETWORK_ORDER, ...Array.from(grouped.keys()).filter((key) => !NETWORK_ORDER.includes(key) && key !== 'other'), 'other']) {
+  const keys = [...NETWORK_ORDER, ...Array.from(grouped.keys()).filter((key) => !NETWORK_ORDER.includes(key) && key !== 'other'), 'other'];
+  
+  for (const networkKey of keys) {
     const items = grouped.get(networkKey);
     if (!items || !items.length) continue;
-    const clean = items.filter((plan) => !isNoisyPlan(plan));
-    const source =
-      networkKey === 'airtel'
-        ? filterAirtelPlans(clean.length ? clean : items)
-        : clean.length >= 4
-          ? clean
-          : items;
-    if (!source.length) continue;
+    
     curatedGroups.push({
       network: networkKey,
-      plans: [...source].sort((a, b) => planPrice(a) - planPrice(b)).slice(0, 8),
+      plans: [...items].sort((a, b) => planPrice(a) - planPrice(b)),
     });
   }
   return curatedGroups;
@@ -194,28 +133,26 @@ export default function BuyDataPage() {
   }, [load]);
 
   const planGroups = useMemo(() => curatePlans(plans), [plans]);
-  const totalCuratedPlans = useMemo(
+  const totalPlansCount = useMemo(
     () => planGroups.reduce((total, group) => total + group.plans.length, 0),
     [planGroups]
   );
 
   useEffect(() => {
     if (activeNetwork !== 'all' && !planGroups.some((group) => group.network === activeNetwork)) {
-      setActiveNetwork('all');
+      if (planGroups.length > 0) {
+        // Only switch if the currently active network has no plans but others do
+      }
     }
   }, [activeNetwork, planGroups]);
 
   const activeGroup = useMemo(() => {
-    if (activeNetwork === 'all') return null;
     return planGroups.find((group) => group.network === activeNetwork) || null;
   }, [activeNetwork, planGroups]);
 
   const visiblePlans = useMemo(() => {
-    if (activeNetwork === 'all') {
-      return planGroups.flatMap((group) => group.plans.map((plan) => ({ ...plan, __group: group.network })));
-    }
     return activeGroup?.plans || [];
-  }, [activeGroup, activeNetwork, planGroups]);
+  }, [activeGroup]);
 
   const summaryNetwork = selected?.network || activeNetwork;
   const summaryPlanName = selected?.plan_name || selected?.plan_code || '—';
@@ -256,7 +193,7 @@ export default function BuyDataPage() {
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">Buy Data</h1>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-              Affordable data bundles for MTN, Airtel, Glo, and 9mobile from one sharp purchase workspace.
+              Affordable data bundles for MTN, Airtel, Glo, and 9mobile. All plans are synced in real-time from our providers.
             </p>
           </div>
           <Button
@@ -277,13 +214,13 @@ export default function BuyDataPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Select network</div>
-                  <div className="mt-2 text-sm text-muted-foreground">Choose the bundle family you want to view.</div>
+                  <div className="mt-2 text-sm text-muted-foreground">Choose your network to see all active plans.</div>
                 </div>
                 <Badge className="border-border bg-secondary text-muted-foreground">Live catalog</Badge>
               </div>
 
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-                {NETWORK_TABS.filter((tab) => tab.key !== 'all').map((tab) => {
+                {NETWORK_TABS.map((tab) => {
                   const group = planGroups.find((item) => item.network === tab.key);
                   const count = group?.plans.length || 0;
                   const isActive = activeNetwork === tab.key;
@@ -327,7 +264,7 @@ export default function BuyDataPage() {
                         {tab.label}
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {count ? 'Available now' : 'No bundles visible'}
+                        {count ? 'Available now' : 'No plans enabled'}
                       </div>
                     </button>
                   );
@@ -338,34 +275,21 @@ export default function BuyDataPage() {
             <section className="space-y-4">
               <div>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Phone number</div>
-                <div className="mt-2 text-sm text-muted-foreground">Enter the recipient line before choosing a bundle.</div>
+                <div className="mt-2 text-sm text-muted-foreground">Enter the recipient phone number.</div>
               </div>
               <Input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 inputMode="tel"
                 autoComplete="tel"
-                placeholder="08012345678 or 2348012345678"
+                placeholder="08012345678"
                 className="h-[52px] rounded-2xl border-border bg-input text-base text-foreground placeholder:text-muted-foreground focus:border-primary/45 focus:ring-amber-500/10 md:h-12"
               />
               {phoneError ? (
                 <p className="text-xs font-medium text-rose-300">{phoneError}</p>
               ) : (
-                <p className="text-xs text-muted-foreground">Use 08012345678 or 2348012345678.</p>
+                <p className="text-xs text-muted-foreground">Format: 080... or 234...</p>
               )}
-              <Button
-                className="hidden h-12 w-full rounded-2xl bg-primary text-primary-foreground shadow-[0_12px_24px_rgba(249,115,22,0.18)] transition hover:bg-primary/90 active:scale-[0.98] md:inline-flex"
-                onClick={purchase}
-                disabled={!canSubmit}
-              >
-                {busy ? 'Processing...' : selected ? `Buy Data — ₦${formatMoney(summaryPrice || 0)}` : 'Buy Data'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              {message ? (
-                <div className="rounded-[18px] border border-border bg-secondary px-4 py-3 text-sm text-muted-foreground">
-                  {message}
-                </div>
-              ) : null}
             </section>
 
             <section className="space-y-4">
@@ -373,11 +297,11 @@ export default function BuyDataPage() {
                 <div>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Select plan</div>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    {activeNetwork === 'all' ? 'All live bundles in one place.' : `${networkLabel(activeNetwork)} plans from the backend catalog.`}
+                    All plans are managed via the Admin Dashboard.
                   </div>
                 </div>
                 <Badge className="border-border bg-secondary text-muted-foreground">
-                  {activeNetwork === 'all' ? totalCuratedPlans : activeGroup?.plans.length || 0} plan{activeNetwork === 'all' ? (totalCuratedPlans === 1 ? '' : 's') : (activeGroup?.plans.length === 1 ? '' : 's')}
+                  {visiblePlans.length} plan{visiblePlans.length === 1 ? '' : 's'}
                 </Badge>
               </div>
 
@@ -390,8 +314,8 @@ export default function BuyDataPage() {
               ) : null}
 
               {!loading && !visiblePlans.length ? (
-                <div className="rounded-[22px] border border-dashed border-border bg-secondary px-4 py-5 text-sm text-muted-foreground">
-                  No bundles are available for this network right now.
+                <div className="rounded-[22px] border border-dashed border-border bg-secondary px-4 py-10 text-center text-sm text-muted-foreground">
+                  No bundles are enabled for {networkLabel(activeNetwork)} right now.
                 </div>
               ) : null}
 
@@ -425,11 +349,11 @@ export default function BuyDataPage() {
                             </div>
                             <div>
                             <div className="text-sm font-medium text-foreground">{plan.plan_name || plan.plan_code}</div>
-                            <div className="mt-1 text-xs text-muted-foreground">{plan.plan_code || 'Plan code unavailable'}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">{plan.plan_code}</div>
                             </div>
                           </div>
                           <Badge className="border-border bg-secondary text-muted-foreground">
-                            {plan.validity || 'Plan'}
+                            {plan.validity || '30d'}
                           </Badge>
                         </div>
                         <div className="mt-4 flex items-end justify-between gap-3">
@@ -453,7 +377,7 @@ export default function BuyDataPage() {
         <Card className="h-fit border-border bg-card shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
           <CardHeader>
             <CardTitle className="text-foreground">Order Summary</CardTitle>
-            <CardDescription className="text-muted-foreground">Bundle delivery</CardDescription>
+            <CardDescription className="text-muted-foreground">Confirm details before purchase</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="rounded-[22px] border border-border bg-secondary p-4">
@@ -478,9 +402,8 @@ export default function BuyDataPage() {
             <div className="space-y-4 rounded-[22px] border border-border bg-secondary p-4">
               {[
                 { label: 'Network', value: networkLabel(summaryNetwork) },
-                { label: 'Bundle type', value: 'Single' },
                 { label: 'Plan', value: summaryPlanName },
-                { label: 'Phone', value: phone.trim() || '—' },
+                { label: 'Recipient', value: phone.trim() || '—' },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between gap-4 border-b border-border pb-3 last:border-0 last:pb-0">
                   <span className="text-sm text-muted-foreground">{item.label}</span>
@@ -491,18 +414,30 @@ export default function BuyDataPage() {
 
             <div className="flex items-end justify-between gap-4 rounded-[22px] border border-border bg-secondary p-4">
               <div>
-                <div className="text-sm text-muted-foreground">Total</div>
+                <div className="text-sm text-muted-foreground">Total Cost</div>
                 <div className="mt-1 text-2xl font-semibold tracking-tight text-primary">
                   ₦{formatMoney(summaryPrice || 0)}
                 </div>
               </div>
-              <div className="text-right text-xs text-muted-foreground">
-                {summaryPlanCode !== '—' ? summaryPlanCode : 'Select a bundle to continue'}
-              </div>
             </div>
 
+            <Button
+              className="h-12 w-full rounded-2xl bg-primary text-primary-foreground shadow-[0_12px_24px_rgba(249,115,22,0.18)] transition hover:bg-primary/90 active:scale-[0.98]"
+              onClick={purchase}
+              disabled={!canSubmit}
+            >
+              {busy ? 'Processing...' : 'Confirm & Purchase'}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+
+            {message ? (
+              <div className="rounded-[18px] border border-border bg-secondary px-4 py-3 text-sm text-muted-foreground break-all">
+                {message}
+              </div>
+            ) : null}
+
             <div className="text-xs leading-6 text-muted-foreground">
-              Live bundles are loaded from the backend catalog. MTN and Glo plans are surfaced first when available.
+              All plans are synced directly from our providers. Ensure the recipient number is correct.
             </div>
           </CardContent>
         </Card>
@@ -516,7 +451,7 @@ export default function BuyDataPage() {
         <div className="mx-auto flex max-w-md items-center gap-3">
           <div className="min-w-0 flex-1">
             <div className="truncate text-xs text-muted-foreground">
-              {selected ? summaryPlanName : 'Select a plan to continue'}
+              {selected ? summaryPlanName : 'Select a plan'}
             </div>
             <div className="mt-1 text-lg font-semibold tracking-tight text-foreground">
               ₦{formatMoney(summaryPrice || 0)}
