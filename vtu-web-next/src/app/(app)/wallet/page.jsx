@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Copy, RefreshCw, Wallet2 } from 'lucide-react';
+import { Copy, RefreshCw, Wallet2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { formatDateTime, formatMoney } from '@/lib/format';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ export default function WalletPage() {
   const [ledger, setLedger] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -24,7 +25,11 @@ export default function WalletPage() {
       ]);
       if (walletRes.status === 'fulfilled') setWallet(walletRes.value);
       if (ledgerRes.status === 'fulfilled') setLedger(Array.isArray(ledgerRes.value) ? ledgerRes.value : []);
-      if (accountRes.status === 'fulfilled') setAccounts(Array.isArray(accountRes.value?.accounts) ? accountRes.value.accounts : []);
+      if (accountRes.status === 'fulfilled') {
+        const accs = Array.isArray(accountRes.value?.accounts) ? accountRes.value.accounts : [];
+        setAccounts(accs);
+        setActiveIndex(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -38,7 +43,7 @@ export default function WalletPage() {
     await navigator.clipboard.writeText(String(value || ''));
   };
 
-  const primary = accounts[0];
+  const activeAccount = accounts[activeIndex] || accounts[0];
 
   return (
     <div className="space-y-6 pb-8">
@@ -54,7 +59,7 @@ export default function WalletPage() {
         )}
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
+      <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
         <Card>
           <CardHeader>
             <CardTitle>Wallet overview</CardTitle>
@@ -88,23 +93,57 @@ export default function WalletPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Funding details</CardTitle>
-            <CardDescription>Dedicated bank transfer account for top-ups.</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle>Funding details</CardTitle>
+              <CardDescription>Dedicated top-up accounts.</CardDescription>
+            </div>
+            {accounts.length > 1 && (
+              <div className="flex items-center gap-1.5 rounded-full border border-border bg-background p-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 rounded-full"
+                  disabled={activeIndex === 0}
+                  onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs font-semibold px-1 select-none">
+                  {activeIndex + 1}/{accounts.length}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 rounded-full"
+                  disabled={activeIndex === accounts.length - 1}
+                  onClick={() => setActiveIndex((prev) => Math.min(accounts.length - 1, prev + 1))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
-            {primary ? (
-              <div className="rounded-3xl border border-border bg-secondary p-4">
-                <div className="text-sm font-medium text-foreground">{primary.bank_name}</div>
-                <div className="mt-3 text-2xl font-semibold tracking-[0.18em] text-foreground">{primary.account_number}</div>
-                <div className="mt-2 text-sm text-muted-foreground">{primary.account_name || 'AxisVTU Wallet'}</div>
-                <Button variant="secondary" className="mt-4 w-full" onClick={() => copy(primary.account_number)}>
-                  <Copy className="h-4 w-4" />
-                  Copy account number
+            {activeAccount ? (
+              <div className="rounded-3xl border border-border bg-secondary p-4 transition-all duration-300 hover:scale-[1.01]">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold tracking-wide text-foreground uppercase">{activeAccount.bank_name}</div>
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                    Active
+                  </span>
+                </div>
+                <div className="mt-3 text-2xl font-semibold tracking-[0.15em] text-foreground font-mono">{activeAccount.account_number}</div>
+                <div className="mt-2 text-sm text-muted-foreground">{activeAccount.account_name || 'AxisVTU Wallet'}</div>
+                <Button variant="secondary" className="mt-4 w-full rounded-2xl" onClick={() => copy(activeAccount.account_number)}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Account Number
                 </Button>
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">Dedicated accounts will appear here once generated.</div>
+              <div className="rounded-2xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground text-center">
+                Dedicated accounts will appear here once generated.
+              </div>
             )}
           </CardContent>
         </Card>
