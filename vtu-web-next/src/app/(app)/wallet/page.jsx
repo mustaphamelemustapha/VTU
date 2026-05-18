@@ -126,15 +126,15 @@ export default function WalletPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {activeAccount ? (
-              <div className="rounded-3xl border border-border bg-secondary p-4 transition-all duration-300 hover:scale-[1.01]">
+              <div className="rounded-3xl border border-blue-500/20 bg-secondary p-5 transition-all duration-300 hover:scale-[1.01] shadow-[0_12px_28px_rgba(37,99,235,0.12)] dark:shadow-[0_16px_36px_rgba(37,99,235,0.18)] dark:border-blue-500/30">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold tracking-wide text-foreground uppercase">{activeAccount.bank_name}</div>
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                  <div className="text-sm font-extrabold tracking-widest text-primary uppercase">{activeAccount.bank_name}</div>
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-0.5 text-xs font-black uppercase text-emerald-700 dark:text-emerald-400">
                     Active
                   </span>
                 </div>
-                <div className="mt-3 text-2xl font-semibold tracking-[0.15em] text-foreground font-mono">{activeAccount.account_number}</div>
-                <div className="mt-2 text-sm text-muted-foreground">{activeAccount.account_name || 'AxisVTU Wallet'}</div>
+                <div className="mt-3 text-3xl font-bold tracking-[0.12em] text-foreground font-mono">{activeAccount.account_number}</div>
+                <div className="mt-3 text-sm font-black text-foreground uppercase tracking-wide">ACCOUNT NAME: {String(activeAccount.account_name || 'AxisVTU Wallet').toUpperCase()}</div>
                 <Button variant="secondary" className="mt-4 w-full rounded-2xl" onClick={() => copy(activeAccount.account_number)}>
                   <Copy className="h-4 w-4 mr-2" />
                   Copy Account Number
@@ -145,6 +145,12 @@ export default function WalletPage() {
                 Dedicated accounts will appear here once generated.
               </div>
             )}
+            <div className="mt-4 p-4 border border-blue-500/20 rounded-2xl bg-blue-500/5 text-xs text-foreground leading-relaxed flex gap-2.5 items-start">
+              <span className="text-base select-none">🔒</span>
+              <span>
+                <strong>Privacy Guarantee:</strong> AxisVTU does <strong>NOT</strong> store or keep your BVN or NIN. This identity verification is securely routed directly to our central CBN-licensed payment partner (Monnify) to automatically generate your personalized funding accounts.
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>
