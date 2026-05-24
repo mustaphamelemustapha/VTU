@@ -1,4 +1,4 @@
-# AxisVTU 12-Day Launch Sprint
+# MELE DATA 12-Day Launch Sprint
 
 - Start date: 2026-04-15
 - Launch date: 2026-04-27

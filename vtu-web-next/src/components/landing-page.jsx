@@ -124,7 +124,7 @@ const faqs = [
   },
   {
     q: 'How secure is my account?',
-    a: 'AxisVTU uses a transaction PIN flow for sensitive actions and keeps records organized for review.',
+    a: 'MELE DATA uses a transaction PIN flow for sensitive actions and keeps records organized for review.',
   },
   {
     q: 'Can I view receipts?',
@@ -144,8 +144,8 @@ const motionFadeUp = {
 function BrandLogo({ className = '' }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`.trim()}>
-      <img src="/brand/axisvtu-logo.png" alt="AxisVTU logo" className="h-10 w-10 rounded-2xl object-contain" />
-      <span className="text-lg font-semibold tracking-tight text-foreground">AxisVTU</span>
+      <img src="/brand/axisvtu-logo.png" alt="MELE DATA logo" className="h-10 w-10 rounded-2xl object-contain" />
+      <span className="text-lg font-semibold tracking-tight text-foreground">MELE DATA</span>
     </span>
   );
 }
@@ -291,7 +291,7 @@ function Hero() {
             className="inline-flex w-fit items-center gap-2 rounded-full border border-orange-200 bg-card px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary shadow-sm"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            AxisVTU for everyday payments
+            MELE DATA for everyday payments
           </motion.div>
 
           <motion.h1
@@ -311,7 +311,7 @@ function Hero() {
             custom={0.16}
             className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl"
           >
-            Top up any network, fund your wallet, and manage everyday payments with a simple, reliable AxisVTU account.
+            Top up any network, fund your wallet, and manage everyday payments with a simple, reliable MELE DATA account.
           </motion.p>
 
           <motion.div
@@ -438,7 +438,7 @@ function ServicesSection() {
     <section id="services" className="bg-card px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <PageSection
-          eyebrow="What you can do with AxisVTU"
+          eyebrow="What you can do with MELE DATA"
           title="The actions are clear, familiar, and easy to scan"
           description="A visitor should understand the product in a few seconds and know exactly where to begin."
         />
@@ -484,7 +484,7 @@ function TrustSection() {
             <PageSection
               eyebrow="Why choose us"
               title="A calmer VTU experience for everyday use"
-              description="AxisVTU is built for people who want speed without confusion, and structure without a crowded interface."
+              description="MELE DATA is built for people who want speed without confusion, and structure without a crowded interface."
             />
             <div className="mt-6 grid gap-3">
               {aboutBullets.map((bullet) => (
@@ -533,12 +533,12 @@ function AboutSection() {
     <section id="about" className="bg-card px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
         <motion.div variants={motionFadeUp} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.25 }} custom={0}>
-          <div className="axis-label text-primary">About AxisVTU</div>
+          <div className="axis-label text-primary">About MELE DATA</div>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             A simple platform for airtime, data, wallet funding, and utility payments
           </h2>
           <p className="mt-5 text-lg leading-8 text-muted-foreground">
-            AxisVTU is a Nigerian VTU and payments platform designed to help people handle ordinary account tasks without friction. It brings top-ups, wallet funding, receipts, and transaction history into one clear web experience.
+            MELE DATA is a Nigerian VTU and payments platform designed to help people handle ordinary account tasks without friction. It brings top-ups, wallet funding, receipts, and transaction history into one clear web experience.
           </p>
           <p className="mt-5 text-lg leading-8 text-muted-foreground">
             The goal is straightforward: keep the interface human, the flow reliable, and the account details easy to understand.
@@ -665,7 +665,7 @@ function Footer() {
           <div>
             <BrandLogo className="[&_span]:text-white" />
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">
-              AxisVTU helps users buy airtime, data, and everyday utility services while keeping wallet funding and transaction records clear.
+              MELE DATA helps users buy airtime, data, and everyday utility services while keeping wallet funding and transaction records clear.
             </p>
             <div className="mt-5 flex items-center gap-3 text-sm text-slate-200">
               <span className="h-2 w-2 rounded-full bg-primary" />
@@ -675,7 +675,7 @@ function Footer() {
 
           <div className="grid gap-8 sm:grid-cols-2">
             <div>
-              <div className="text-sm font-semibold text-white">AxisVTU</div>
+              <div className="text-sm font-semibold text-white">MELE DATA</div>
               <div className="mt-4 space-y-3 text-sm">
                 <div><a href="#services" className="hover:text-white">What you can do</a></div>
                 <div><a href="#trust" className="hover:text-white">Why choose us</a></div>
@@ -694,7 +694,7 @@ function Footer() {
         </div>
         <Separator className="my-10 bg-white/10" />
         <div className="flex flex-col gap-4 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
-          <div>© 2026 AxisVTU. All rights reserved.</div>
+          <div>© 2026 MELE DATA. Powered by MMTECHGLOBE.</div>
           <div className="flex gap-4">
             <span>Official web platform</span>
             <span>Nigerian VTU services</span>

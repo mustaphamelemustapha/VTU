@@ -1,0 +1,8 @@
+*
+!vtu-web-next
+!vtu-web-next/
+!vtu-web-next/**
+vtu-web-next/node_modules/
+vtu-web-next/.next/
+vtu-web-next/.vercel/
+vtu-web-next/.env.local

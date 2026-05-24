@@ -1,8 +1,8 @@
 import React from 'react';
 
 export const metadata = {
-  title: 'Privacy Policy | AxisVTU',
-  description: 'Privacy Policy for AxisVTU mobile application and services.',
+  title: 'Privacy Policy | MELE DATA',
+  description: 'Privacy Policy for MELE DATA mobile application and services.',
 };
 
 export default function PrivacyPolicy() {
@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-2xl font-bold mb-4">1. Introduction</h2>
         <p className="mb-4 leading-relaxed">
-          Welcome to AxisVTU. We are committed to protecting your personal information and your right to privacy. 
+          Welcome to MELE DATA. We are committed to protecting your personal information and your right to privacy. 
           This Privacy Policy explains how we collect, use, and safeguard your data when you use our mobile application and web services.
         </p>
       </section>
@@ -65,12 +65,12 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-2xl font-bold mb-4">6. Contact Us</h2>
         <p className="mb-4 leading-relaxed">
-          If you have any questions about this Privacy Policy, please contact us at support@axisvtu.com.
+          If you have any questions about this Privacy Policy, please contact us at mmtechglobe@gmail.com.
         </p>
       </section>
 
       <footer className="mt-12 pt-8 border-t text-center text-slate-500 text-sm">
-        &copy; 2026 AxisVTU. All rights reserved.
+        &copy; 2026 MELE DATA. Powered by MMTECHGLOBE.
       </footer>
     </main>
   );
