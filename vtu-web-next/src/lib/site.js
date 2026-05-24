@@ -10,7 +10,7 @@ export function getSiteOrigin() {
   const env = normalizeBase(process.env.NEXT_PUBLIC_SITE_URL);
   if (env) return env;
 
-  return 'https://axisvtu.com';
+  return 'https://meledata.ng';
 }
 
 export function buildReferralUrl(code) {
