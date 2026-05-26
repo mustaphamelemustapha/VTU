@@ -328,50 +328,49 @@ export default function BuyDataPage() {
               ) : null}
 
               {!loading && visiblePlans.length ? (
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3.5 md:gap-4 lg:grid-cols-3">
                   {visiblePlans.map((plan) => {
                     const isActive = selected?.plan_code === plan.plan_code;
+                    const isPromo = plan.promo_active;
                     return (
                       <button
                         key={plan.plan_code}
                         type="button"
                         onClick={() => setSelected(plan)}
                         className={cn(
-                          'rounded-[22px] border px-4 py-4 text-left transition',
+                          'group relative flex flex-col items-center justify-center rounded-[28px] border px-4 py-6 text-center transition-all duration-300 min-h-[160px]',
                           isActive
-                            ? 'border-primary/45 bg-primary/12 shadow-[0_0_0_1px_rgba(245,158,11,0.14)]'
-                            : 'border-border bg-secondary hover:border-border hover:bg-secondary'
+                            ? 'border-primary/50 bg-primary/10 shadow-[0_12px_28px_rgba(249,115,22,0.12)] ring-1 ring-primary/30'
+                            : 'border-border/60 bg-card hover:border-primary/30 hover:bg-secondary/40'
                         )}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1 ring-1 ring-border">
-                              <Image
-                                src={networkLogoSrc(plan.network)}
-                                alt={`${networkLabel(plan.network)} logo`}
-                                width={36}
-                                height={36}
-                                className="h-full w-full object-contain"
-                                unoptimized
-                              />
-                            </div>
-                            <div>
-                            <div className="text-sm font-medium text-foreground">{plan.plan_name || plan.plan_code}</div>
-                            <div className="mt-1 text-xs text-muted-foreground">{plan.plan_code}</div>
-                            </div>
-                          </div>
-                          <Badge className="border-border bg-secondary text-muted-foreground">
-                            {plan.validity || '30d'}
-                          </Badge>
+                        {/* 1. Capacity / Name */}
+                        <div className="text-lg font-black tracking-tight text-foreground md:text-xl">
+                          {plan.plan_name || plan.data_size}
                         </div>
-                        <div className="mt-4 flex items-end justify-between gap-3">
-                          <div>
-                            <div className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Price</div>
-                            <div className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-                              ₦{formatMoney(plan.price || 0)}
-                            </div>
-                          </div>
-                          <div className="text-sm text-muted-foreground">{plan.data_size || '—'}</div>
+
+                        {/* 2. Price (current + previous line-through) */}
+                        <div className="mt-2 flex items-center justify-center gap-2">
+                          <span className={cn("text-base font-extrabold text-foreground", isActive ? "text-primary" : "")}>
+                            ₦{formatMoney(plan.price || 0)}
+                          </span>
+                          {isPromo && plan.promo_old_price && (
+                            <span className="text-xs text-muted-foreground line-through decoration-muted-foreground/60">
+                              ₦{formatMoney(plan.promo_old_price)}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* 3. Validity & Promo Label row */}
+                        <div className="mt-3.5 flex items-center justify-center gap-1.5 flex-wrap">
+                          <span className="rounded-full border border-border bg-secondary/30 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                            {plan.validity || '30 days'}
+                          </span>
+                          {isPromo && plan.promo_label && (
+                            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/5 px-2.5 py-0.5 text-[10px] font-bold text-emerald-500">
+                              {plan.promo_label}
+                            </span>
+                          )}
                         </div>
                       </button>
                     );
