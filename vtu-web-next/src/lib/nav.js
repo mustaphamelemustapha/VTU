@@ -12,6 +12,7 @@ import {
   Tv2,
   UserCircle2,
   Zap,
+  MessageCircle,
 } from 'lucide-react';
 
 export const appNav = [
@@ -27,6 +28,8 @@ export const appNav = [
   { label: 'Notifications', href: '/notifications', icon: Bell },
   { label: 'History', href: '/history', icon: Clock3 },
   { label: 'Profile', href: '/profile', icon: UserCircle2 },
+  { label: 'WhatsApp Channel', href: 'https://whatsapp.com/channel/0029VbCanujEawdvqLAYu83T', icon: MessageCircle, external: true },
+  { label: 'TikTok Page', href: 'https://www.tiktok.com/@meledata_ng', icon: Tv2, external: true },
 ];
 
 export const quickActions = [
