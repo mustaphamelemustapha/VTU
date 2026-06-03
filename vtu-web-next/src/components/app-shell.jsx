@@ -54,6 +54,8 @@ const mobileSettingsMenu = [
   { label: 'Profile', href: '/profile', icon: UserCircle2 },
   { label: 'Security', href: '/profile#security', icon: ShieldCheck },
   { label: 'Support', href: 'mailto:mmtechglobe@gmail.com', icon: Headphones, external: true },
+  { label: 'WhatsApp Channel', href: 'https://whatsapp.com/channel/0029VbCanujEawdvqLAYu83T', icon: Headphones, external: true },
+  { label: 'TikTok Page', href: 'https://www.tiktok.com/@meledata_ng', icon: Tv2, external: true },
 ];
 
 function MobileMenuLink({ item, activePath }) {
@@ -83,7 +85,7 @@ function MobileMenuLink({ item, activePath }) {
 
   if (item.external) {
     return (
-      <a href={item.href} className={className}>
+      <a href={item.href} className={className} target="_blank" rel="noopener noreferrer">
         {content}
       </a>
     );
@@ -199,6 +201,22 @@ export function AppShell({ children }) {
           {appNav.map((item) => {
             const Icon = item.icon;
             const active = activePath === item.href || activePath.startsWith(`${item.href}/`);
+            if (item.external) {
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    'flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition border-transparent text-muted-foreground hover:border-border hover:bg-secondary hover:text-foreground'
+                  )}
+                >
+                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <span>{item.label}</span>
+                </a>
+              );
+            }
             return (
               <Link
                 key={item.href}
