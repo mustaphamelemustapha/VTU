@@ -218,6 +218,6 @@ flutter build ipa         # iOS release
 | BUG-01 | Flutter | `local_auth` fallback PIN sometimes doesn't clear on cancel | Open |
 | BUG-02 | Backend | Amigo "coming soon" errors intermittently returned for valid plans; marked pending (safe) | Mitigated |
 | BUG-03 | Frontend | Transaction history on web requires manual refresh after purchase on slow connections | Open |
-| BUG-04 | Backend | `wallet/temp-reset` endpoint is public (debug utility) — must be removed or admin-gated before scale | Open |
+| BUG-04 | Backend | `wallet/temp-reset` endpoint is public (debug utility) — must be removed or admin-gated before scale | Closed (Admin Gated) |
 | BUG-05 | Flutter | `audioplayers` success sound sometimes plays twice on fast purchases | Low priority |
 | BUG-06 | Backend | Monnify webhook route is in `wallet.py` (inline) rather than `webhooks.py` — inconsistency | Tech debt |

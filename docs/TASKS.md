@@ -21,6 +21,7 @@ This document tracks completed, in-progress, and pending engineering tasks for t
 - [x] **Paystack Webhook Idempotency**: Safe, deduplicated wallet crediting based on Paystack/Monnify external payment references.
 - [x] **Transport-Error Graceful Degradation**: Backend marks purchases as `PENDING` rather than `FAILED` on provider timeouts, allowing the background worker to reconcile later without false refunding.
 - [x] **Rebrand Re-routing**: Update landing page content and references from AxisVTU to MELE DATA.
+- [x] **Secure Temp-Reset Endpoint (BUG-04)**: Admin-gated the `wallet/temp-reset` endpoint to prevent public deletion of cached virtual bank accounts.
 - [x] **Primary Documentation Handover**: Created root `README.md`, `AGENTS.md`, `docs/ARCHITECTURE.md`, and `docs/API.md`.
 
 ---
