@@ -24,6 +24,7 @@ This document tracks completed, in-progress, and pending engineering tasks for t
 - [x] **Secure Temp-Reset Endpoint (BUG-04)**: Admin-gated the `wallet/temp-reset` endpoint to prevent public deletion of cached virtual bank accounts.
 - [x] **Campaign Activation & Referral Auto-Credit**: Implemented activation date counting, webhook/reconciler auto-credits for referred agents hitting 50GB+, and Flutter "Unlock" button.
 - [x] **Primary Documentation Handover**: Created root `README.md`, `AGENTS.md`, `docs/ARCHITECTURE.md`, and `docs/API.md`.
+- [x] **Agent Auto-Upgrade & Benefits Dialog**: Referred users automatically upgraded to agent role on hitting 50GB sales, with congratulatory benefits popup dialog on app entry.
 
 ---
 
