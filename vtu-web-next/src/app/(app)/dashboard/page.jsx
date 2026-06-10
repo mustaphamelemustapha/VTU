@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, CircleDollarSign, Copy, Gift, Landmark, Package2, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, CircleDollarSign, Copy, Gift, Landmark, Package2, RefreshCw, Sparkles, Smartphone, Zap, Tv2, GraduationCap } from 'lucide-react';
 import { apiFetch, getProfile } from '@/lib/api';
 import { formatDateTime, formatMoney } from '@/lib/format';
 import { quickActions } from '@/lib/nav';
@@ -202,48 +202,36 @@ export default function DashboardPage() {
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-        <Card className="overflow-hidden">
-          <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-border bg-gradient-to-r from-secondary to-card">
-            <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" />
-                Action board
-              </div>
-              <CardTitle>Quick actions</CardTitle>
-              <CardDescription>Start the common tasks without searching around the dashboard.</CardDescription>
+        <Card className="overflow-hidden border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+          <CardHeader className="border-b border-border/50 bg-gradient-to-r from-secondary/50 to-card/50 py-4 px-5">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <CardTitle className="text-lg font-semibold tracking-tight">Quick Services</CardTitle>
             </div>
-            <Badge tone="neutral" className="hidden sm:inline-flex">Responsive</Badge>
           </CardHeader>
-          <CardContent className="p-4 sm:p-5">
-            <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-              {quickActions.map((item, index) => {
+          <CardContent className="p-5">
+            <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
+              {[
+                { label: 'Data', href: '/buy-data', icon: Package2, color: 'text-orange-500 bg-orange-500/10 dark:bg-orange-500/20' },
+                { label: 'Airtime', href: '/airtime', icon: Smartphone, color: 'text-sky-500 bg-sky-500/10 dark:bg-sky-500/20' },
+                { label: 'Cable TV', href: '/cable-tv', icon: Tv2, color: 'text-indigo-500 bg-indigo-500/10 dark:bg-indigo-500/20' },
+                { label: 'Electricity', href: '/electricity', icon: Zap, color: 'text-amber-500 bg-amber-500/10 dark:bg-amber-500/20' },
+                { label: 'Exam PINs', href: '/exam-pins', icon: GraduationCap, color: 'text-violet-500 bg-violet-500/10 dark:bg-violet-500/20' },
+                { label: 'Wallet', href: '/wallet', icon: CircleDollarSign, color: 'text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20' },
+              ].map((item) => {
                 const Icon = item.icon;
-                const detail = actionDetails[item.href] || actionDetails['/profile'];
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`group relative overflow-hidden rounded-3xl border bg-gradient-to-br ${detail.tone} p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] focus:outline-none focus:ring-2 focus:ring-primary/25 dark:hover:shadow-[0_18px_45px_rgba(0,0,0,0.22)] ${
-                      index === 0 ? 'sm:col-span-2 2xl:col-span-1' : ''
-                    }`}
+                    className="group flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/40 p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card hover:shadow-[0_12px_30px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.2)]"
                   >
-                    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-white/35 blur-2xl dark:bg-white/5" />
-                    <div className="relative flex items-start justify-between gap-4">
-                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-lg ${detail.iconTone}`}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <span className="rounded-full border border-border bg-card/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                        {detail.kicker}
-                      </span>
+                    <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${item.color}`}>
+                      <Icon className="h-6 w-6" />
                     </div>
-                    <div className="relative mt-5">
-                      <div className="text-base font-semibold tracking-tight text-foreground">{item.label}</div>
-                      <p className="mt-2 min-h-[44px] text-sm leading-6 text-muted-foreground">{detail.description}</p>
-                      <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                        {detail.cta}
-                        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                      </div>
-                    </div>
+                    <span className="text-xs font-semibold tracking-tight text-foreground transition-colors duration-200 group-hover:text-primary">
+                      {item.label}
+                    </span>
                   </Link>
                 );
               })}
