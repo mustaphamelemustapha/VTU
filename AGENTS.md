@@ -193,7 +193,7 @@ flutter build ipa         # iOS release
 ## Current Roadmap
 
 ### P0 — Critical / In Progress
-- iOS App Store submission (TestFlight → public)
+- [x] iOS App Store submission (TestFlight → public)
 - Production monitoring & alerting (Render + Vercel health checks)
 - Agent reseller dashboard parity (web + Flutter)
 
