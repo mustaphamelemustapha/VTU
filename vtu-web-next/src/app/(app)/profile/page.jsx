@@ -261,7 +261,7 @@ export default function ProfilePage() {
             )}
 
             {developerState.developer_status === 'applied' && (
-              <div className="rounded-2xl bg-orange-50 border border-orange-200 p-3 text-xs text-orange-800">
+              <div className="rounded-2xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-800">
                 Your application is currently under review. We will verify and update your status shortly.
               </div>
             )}

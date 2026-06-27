@@ -219,7 +219,7 @@ export function AuthPage({ initialMode, refCode: presetRef }) {
                       className={inputCls}
                       value={form.full_name}
                       onChange={set('full_name')}
-                      placeholder="e.g. Rayyan Tilde"
+                      placeholder="e.g. Mustapha Mele"
                       autoComplete="name"
                       required
                     />
@@ -235,6 +235,18 @@ export function AuthPage({ initialMode, refCode: presetRef }) {
                       autoComplete="tel"
                       inputMode="tel"
                       required
+                    />
+                  </InputField>
+
+                  {/* Email */}
+                  <InputField label="Email" icon={<MailIcon />}>
+                    <input
+                      className={inputCls}
+                      value={form.email}
+                      onChange={set('email')}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      type="email"
                     />
                   </InputField>
 
@@ -260,23 +272,27 @@ export function AuthPage({ initialMode, refCode: presetRef }) {
                     </button>
                   </InputField>
 
-                  {/* State */}
-                  <InputField label="State" icon={<MapPinIcon />}>
-                    <select
-                      className={`${inputCls} appearance-none cursor-pointer`}
-                      value={form.state}
-                      onChange={set('state')}
-                    >
-                      <option value="" className="bg-slate-900 text-slate-500">Select your state</option>
-                      {STATES.map((s) => (
-                        <option key={s} value={s} className="bg-slate-900 text-slate-100">{s}</option>
-                      ))}
-                    </select>
-                    {/* Dropdown chevron */}
-                    <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </InputField>
+                  {/* Referral code */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[13px] font-medium text-slate-300">Referral code</label>
+                      <span className="text-[11px] text-slate-500 font-medium">Optional</span>
+                    </div>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2">
+                        <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                        </svg>
+                      </div>
+                      <input
+                        className={inputCls}
+                        value={form.referral_code}
+                        onChange={set('referral_code')}
+                        placeholder="Enter a friend's code"
+                        autoComplete="off"
+                      />
+                    </div>
+                  </div>
                 </>
               ) : (
                 <>

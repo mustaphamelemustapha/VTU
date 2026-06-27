@@ -23,8 +23,8 @@ const actionDetails = {
     kicker: 'Most used',
     description: 'Purchase mobile data with a guided flow and clean confirmation.',
     cta: 'Buy data',
-    tone: 'from-orange-500/16 via-orange-500/8 to-transparent border-orange-300/70',
-    iconTone: 'bg-orange-500 text-white shadow-orange-500/20',
+    tone: 'from-blue-500/16 via-blue-500/8 to-transparent border-blue-300/70',
+    iconTone: 'bg-blue-500 text-white shadow-blue-500/20',
   },
   '/services': {
     kicker: 'Catalog',
@@ -144,7 +144,7 @@ export default function DashboardPage() {
       <Card className="overflow-hidden border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card shadow-[0_24px_70px_rgba(234,115,69,0.10)]">
         <CardContent className="grid gap-5 p-5 md:grid-cols-[1fr_auto] md:items-center sm:p-6">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-lg shadow-orange-500/20">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-lg shadow-blue-500/20">
               <Landmark className="h-6 w-6" />
             </div>
             <div className="min-w-0">
@@ -212,7 +212,7 @@ export default function DashboardPage() {
           <CardContent className="p-5">
             <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
               {[
-                { label: 'Data', href: '/buy-data', icon: Package2, color: 'text-orange-500 bg-orange-500/10 dark:bg-orange-500/20' },
+                { label: 'Data', href: '/buy-data', icon: Package2, color: 'text-blue-500 bg-blue-500/10 dark:bg-blue-500/20' },
                 { label: 'Airtime', href: '/airtime', icon: Smartphone, color: 'text-sky-500 bg-sky-500/10 dark:bg-sky-500/20' },
                 { label: 'Cable TV', href: '/cable-tv', icon: Tv2, color: 'text-indigo-500 bg-indigo-500/10 dark:bg-indigo-500/20' },
                 { label: 'Electricity', href: '/electricity', icon: Zap, color: 'text-amber-500 bg-amber-500/10 dark:bg-amber-500/20' },

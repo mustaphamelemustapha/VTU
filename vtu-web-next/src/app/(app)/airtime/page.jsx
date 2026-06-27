@@ -189,7 +189,7 @@ export default function AirtimePage() {
           <CardContent className="space-y-4">
             <div className="rounded-2xl border border-border bg-secondary p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-50 text-primary">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-primary">
                   <Phone className="h-4 w-4" />
                 </div>
                 <div>

@@ -72,7 +72,7 @@ export default function WalletPage() {
                 <div className="mt-2 text-3xl font-semibold tracking-tight text-foreground">₦{formatMoney(wallet?.balance || 0)}</div>
                 <div className="mt-2 text-sm text-muted-foreground">{loading ? 'Syncing wallet data...' : 'Wallet loaded from the existing API.'}</div>
               </div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-orange-50 text-primary">
+              <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-blue-50 text-primary">
                 <Wallet2 className="h-6 w-6" />
               </div>
             </div>

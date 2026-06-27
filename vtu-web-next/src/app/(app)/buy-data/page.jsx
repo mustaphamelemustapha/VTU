@@ -239,7 +239,7 @@ export default function BuyDataPage() {
                         ? 'bg-emerald-500 text-foreground'
                         : tab.key === 'airtel'
                           ? 'bg-rose-500 text-foreground'
-                          : 'bg-orange-500 text-foreground';
+                          : 'bg-blue-500 text-foreground';
 
                   return (
                     <button

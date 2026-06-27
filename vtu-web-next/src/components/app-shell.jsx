@@ -224,7 +224,7 @@ export function AppShell({ children }) {
                 className={cn(
                   'flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition',
                   active
-                    ? 'border-primary/35 bg-primary/12 text-foreground shadow-lg shadow-orange-500/10'
+                    ? 'border-primary/35 bg-primary/12 text-foreground shadow-lg shadow-blue-500/10'
                     : 'border-transparent text-muted-foreground hover:border-border hover:bg-secondary hover:text-foreground'
                 )}
               >
@@ -324,7 +324,7 @@ export function AppShell({ children }) {
               size="icon"
               className={cn(
                 'h-9 w-9 shrink-0 rounded-xl md:hidden',
-                'border-amber-200/80 bg-gradient-to-br from-amber-50 via-orange-50 to-card text-primary shadow-[0_8px_24px_rgba(234,115,69,0.14)] hover:border-primary/40 hover:bg-primary/10 dark:border-orange-400/20 dark:from-orange-500/15 dark:via-amber-500/10 dark:to-card'
+                'border-amber-200/80 bg-gradient-to-br from-amber-50 via-blue-50 to-card text-primary shadow-[0_8px_24px_rgba(234,115,69,0.14)] hover:border-primary/40 hover:bg-primary/10 dark:border-blue-400/20 dark:from-blue-500/15 dark:via-amber-500/10 dark:to-card'
               )}
               onClick={toggleTheme}
               aria-label="Toggle theme"

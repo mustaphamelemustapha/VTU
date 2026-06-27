@@ -180,7 +180,7 @@ export default function ReferralsPage() {
                         <span className="text-foreground font-semibold">{statusSplit.pending.count} ({statusSplit.pending.pct}%)</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-border overflow-hidden">
-                        <div className="h-full bg-orange-400 rounded-full" style={{ width: `${statusSplit.pending.pct}%` }} />
+                        <div className="h-full bg-blue-400 rounded-full" style={{ width: `${statusSplit.pending.pct}%` }} />
                       </div>
                     </div>
                   </div>
@@ -330,7 +330,7 @@ export default function ReferralsPage() {
           <CardContent className="space-y-4">
             <div className="rounded-2xl border border-border bg-secondary p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-50 text-primary">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-primary">
                   <Users className="h-4 w-4" />
                 </div>
                 <div>
