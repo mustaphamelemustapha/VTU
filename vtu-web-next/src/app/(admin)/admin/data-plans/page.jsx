@@ -45,6 +45,8 @@ export default function AdminDataPlansPage() {
   const [promoActiveInput, setPromoActiveInput] = useState(false);
   const [promoOldPriceInput, setPromoOldPriceInput] = useState('');
   const [promoLabelInput, setPromoLabelInput] = useState('');
+  const [fallbackProviderInput, setFallbackProviderInput] = useState('');
+  const [fallbackPlanIdInput, setFallbackPlanIdInput] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -173,6 +175,8 @@ export default function AdminDataPlansPage() {
     setPromoActiveInput(plan.promo_active ?? false);
     setPromoOldPriceInput(plan.promo_old_price !== null ? String(plan.promo_old_price) : '');
     setPromoLabelInput(plan.promo_label || '');
+    setFallbackProviderInput(plan.fallback_provider || '');
+    setFallbackPlanIdInput(plan.fallback_provider_plan_id || '');
   };
 
   const handleSavePlan = async () => {
@@ -223,6 +227,20 @@ export default function AdminDataPlansPage() {
         payload.promo_label = promoLabelVal;
       }
       
+      const fbProvVal = fallbackProviderInput.trim();
+      if (fbProvVal === '' || fbProvVal === 'none') {
+        payload.clear_fallback_provider = true;
+      } else {
+        payload.fallback_provider = fbProvVal;
+      }
+      
+      const fbPlanIdVal = fallbackPlanIdInput.trim();
+      if (fbPlanIdVal === '') {
+        payload.clear_fallback_provider_plan_id = true;
+      } else {
+        payload.fallback_provider_plan_id = fbPlanIdVal;
+      }
+
       await adminUpdateDataPlan(editingPlan.id, payload);
       await load();
       setEditingPlan(null);
@@ -361,6 +379,14 @@ export default function AdminDataPlansPage() {
               <span className="font-mono text-[9px] text-muted-foreground tracking-tight">
                 ID: {row.provider_plan_id || row.plan_code || '—'}
               </span>
+              {row.fallback_provider && row.fallback_provider !== 'none' && (
+                <div className="mt-1 pt-1 border-t border-border/40">
+                  <span className="text-[10px] text-orange-500 font-medium uppercase block">Fallback: {row.fallback_provider}</span>
+                  <span className="font-mono text-[9px] text-muted-foreground tracking-tight">
+                    ID: {row.fallback_provider_plan_id || '—'}
+                  </span>
+                </div>
+              )}
             </div>
           )},
           { key: 'plan_code', label: 'System code', render: (row) => <span className="font-mono text-xs text-muted-foreground">{row.plan_code || '—'}</span> },
@@ -508,6 +534,40 @@ export default function AdminDataPlansPage() {
                   <p className="text-xs text-muted-foreground">
                     Explicit price for Agents/Resellers.
                   </p>
+                </div>
+              </div>
+
+              <div className="border-t border-border/50 pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Fallback Provider</label>
+                    <select
+                      className="w-full axis-input p-2 rounded-md border border-border"
+                      value={fallbackProviderInput}
+                      onChange={(e) => setFallbackProviderInput(e.target.value)}
+                      disabled={isSavingPlan}
+                    >
+                      <option value="none">None (No Fallback)</option>
+                      <option value="amigo">Amigo</option>
+                      <option value="smeplug">SMEPlug</option>
+                      <option value="clubkonnect">ClubKonnect</option>
+                    </select>
+                    <p className="text-[10px] text-muted-foreground">
+                      Provider to try if primary fails
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Fallback Plan ID</label>
+                    <Input
+                      placeholder="e.g. 1001"
+                      value={fallbackPlanIdInput}
+                      onChange={(e) => setFallbackPlanIdInput(e.target.value)}
+                      disabled={isSavingPlan}
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Plan ID for the fallback provider
+                    </p>
+                  </div>
                 </div>
               </div>
 
