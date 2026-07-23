@@ -159,9 +159,36 @@ export default function BuyDataPage() {
     return planGroups.find((group) => group.network === activeNetwork) || null;
   }, [activeNetwork, planGroups]);
 
-  const visiblePlans = useMemo(() => {
-    return activeGroup?.plans || [];
+  const availableDataTypes = useMemo(() => {
+    if (!activeGroup || !activeGroup.plans) return [];
+    const types = new Set();
+    for (const p of activeGroup.plans) {
+      types.add(p.data_type || 'ALL');
+    }
+    // If 'ALL' is the only type, or if there's a mix, sort them logically. Let's just return sorted array.
+    const arr = Array.from(types).sort();
+    // Prioritize standard types if present, else just sort.
+    return arr;
   }, [activeGroup]);
+
+  const [activeDataType, setActiveDataType] = useState('');
+
+  // When network changes or data types change, reset active data type to the first one
+  useEffect(() => {
+    if (availableDataTypes.length > 0) {
+      if (!activeDataType || !availableDataTypes.includes(activeDataType)) {
+        setActiveDataType(availableDataTypes[0]);
+      }
+    } else {
+      setActiveDataType('');
+    }
+  }, [availableDataTypes, activeDataType]);
+
+  const visiblePlans = useMemo(() => {
+    if (!activeGroup) return [];
+    if (!activeDataType) return activeGroup.plans;
+    return activeGroup.plans.filter((p) => (p.data_type || 'ALL') === activeDataType);
+  }, [activeGroup, activeDataType]);
 
   const summaryNetwork = selected?.network || activeNetwork;
   const summaryPlanName = selected?.plan_name || selected?.plan_code || '—';
@@ -276,6 +303,29 @@ export default function BuyDataPage() {
                   {visiblePlans.length} plan{visiblePlans.length === 1 ? '' : 's'}
                 </Badge>
               </div>
+
+              {availableDataTypes.length > 1 && (
+                <div className="flex flex-wrap gap-2 pt-2 pb-1">
+                  {availableDataTypes.map((type) => {
+                    const isSelected = activeDataType === type;
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setActiveDataType(type)}
+                        className={cn(
+                          "px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors border",
+                          isSelected 
+                            ? "bg-primary text-primary-foreground border-primary" 
+                            : "bg-secondary text-muted-foreground border-border hover:bg-secondary/80 hover:text-foreground"
+                        )}
+                      >
+                        {type === 'ALL' ? 'General' : type}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {loading ? (
                 <div className="grid gap-3 md:grid-cols-2">
