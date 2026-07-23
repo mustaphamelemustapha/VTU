@@ -47,6 +47,7 @@ export default function AdminDataPlansPage() {
   const [promoLabelInput, setPromoLabelInput] = useState('');
   const [fallbackProviderInput, setFallbackProviderInput] = useState('');
   const [fallbackPlanIdInput, setFallbackPlanIdInput] = useState('');
+  const [dataTypeInput, setDataTypeInput] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -177,6 +178,7 @@ export default function AdminDataPlansPage() {
     setPromoLabelInput(plan.promo_label || '');
     setFallbackProviderInput(plan.fallback_provider || '');
     setFallbackPlanIdInput(plan.fallback_provider_plan_id || '');
+    setDataTypeInput(plan.data_type || '');
   };
 
   const handleSavePlan = async () => {
@@ -239,6 +241,13 @@ export default function AdminDataPlansPage() {
         payload.clear_fallback_provider_plan_id = true;
       } else {
         payload.fallback_provider_plan_id = fbPlanIdVal;
+      }
+
+      const dataTypeVal = dataTypeInput.trim();
+      if (dataTypeVal === '') {
+        payload.clear_data_type = true;
+      } else {
+        payload.data_type = dataTypeVal;
       }
 
       await adminUpdateDataPlan(editingPlan.id, payload);
@@ -465,14 +474,32 @@ export default function AdminDataPlansPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Plan Name (Display)</label>
-                <Input
-                  placeholder="e.g. 1GB - 30 Days"
-                  value={planNameInput}
-                  onChange={(e) => setPlanNameInput(e.target.value)}
-                  disabled={isSavingPlan}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Plan Name (Display)</label>
+                  <Input
+                    placeholder="e.g. 1GB - 30 Days"
+                    value={planNameInput}
+                    onChange={(e) => setPlanNameInput(e.target.value)}
+                    disabled={isSavingPlan}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Data Type Category</label>
+                  <select
+                    className="w-full axis-input p-2 rounded-md border border-border"
+                    value={dataTypeInput}
+                    onChange={(e) => setDataTypeInput(e.target.value)}
+                    disabled={isSavingPlan}
+                  >
+                    <option value="">None / Uncategorized</option>
+                    <option value="SME">SME</option>
+                    <option value="SME2">SME2</option>
+                    <option value="GIFTING">GIFTING</option>
+                    <option value="CORPORATE GIFTING">CORPORATE GIFTING</option>
+                    <option value="AWOOF DATA">AWOOF DATA</option>
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-2">
