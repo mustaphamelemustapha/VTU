@@ -175,18 +175,14 @@ export default function BuyDataPage() {
 
   // When network changes or data types change, reset active data type to the first one
   useEffect(() => {
-    if (availableDataTypes.length > 0) {
-      if (!activeDataType || !availableDataTypes.includes(activeDataType)) {
-        setActiveDataType(availableDataTypes[0]);
-      }
-    } else {
+    if (activeDataType && !availableDataTypes.includes(activeDataType)) {
       setActiveDataType('');
     }
   }, [availableDataTypes, activeDataType]);
 
   const visiblePlans = useMemo(() => {
     if (!activeGroup) return [];
-    if (!activeDataType) return activeGroup.plans;
+    if (!activeDataType) return [];
     return activeGroup.plans.filter((p) => (p.data_type || 'ALL') === activeDataType);
   }, [activeGroup, activeDataType]);
 
@@ -336,8 +332,11 @@ export default function BuyDataPage() {
               ) : null}
 
               {!loading && !visiblePlans.length ? (
-                <div className="rounded-[22px] border border-dashed border-border bg-secondary px-4 py-10 text-center text-sm text-muted-foreground">
-                  No bundles are enabled for {networkLabel(activeNetwork)} right now.
+                <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground border border-dashed border-border rounded-xl bg-card">
+                  <Database className="h-10 w-10 mb-3 opacity-20" />
+                  {!activeDataType 
+                    ? "Please select a Data Type Category above to view available plans."
+                    : "No plans available for this network or category."}
                 </div>
               ) : null}
 
