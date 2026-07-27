@@ -122,6 +122,8 @@ export default function AdminDataPlansPage() {
     data_size: '',
     validity: '30 Days',
     base_price: '',
+    agent_price: '',
+    user_price: '',
     provider: 'amigo',
     provider_plan_id: '',
     is_active: true
@@ -140,6 +142,8 @@ export default function AdminDataPlansPage() {
         data_size: '',
         validity: '30 Days',
         base_price: '',
+        agent_price: '',
+        user_price: '',
         provider: 'amigo',
         provider_plan_id: '',
         is_active: true
@@ -745,6 +749,27 @@ export default function AdminDataPlansPage() {
                       placeholder="e.g. 30 Days"
                       value={newPlan.validity}
                       onChange={(e) => setNewPlan({...newPlan, validity: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">User Price (₦)</label>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      value={newPlan.user_price}
+                      onChange={(e) => setNewPlan({...newPlan, user_price: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Agent Price (₦)</label>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      value={newPlan.agent_price}
+                      onChange={(e) => setNewPlan({...newPlan, agent_price: e.target.value})}
                     />
                   </div>
                 </div>
