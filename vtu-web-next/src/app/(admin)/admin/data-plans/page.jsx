@@ -126,14 +126,25 @@ export default function AdminDataPlansPage() {
     user_price: '',
     provider: 'amigo',
     provider_plan_id: '',
+    fallback_provider: 'none',
+    fallback_provider_plan_id: '',
+    data_type: '',
     is_active: true
   });
 
   const handleCreatePlan = async (e) => {
     e.preventDefault();
     try {
+      const payload = { ...newPlan };
+      if (payload.fallback_provider === 'none' || payload.fallback_provider === '') {
+        delete payload.fallback_provider;
+        delete payload.fallback_provider_plan_id;
+      }
+      if (payload.data_type === '') {
+        delete payload.data_type;
+      }
       const { adminCreateDataPlan } = await import('@/lib/api');
-      await adminCreateDataPlan(newPlan);
+      await adminCreateDataPlan(payload);
       setIsAddModalOpen(false);
       setNewPlan({
         network: 'mtn',
@@ -146,6 +157,9 @@ export default function AdminDataPlansPage() {
         user_price: '',
         provider: 'amigo',
         provider_plan_id: '',
+        fallback_provider: 'none',
+        fallback_provider_plan_id: '',
+        data_type: '',
         is_active: true
       });
       alert("Plan created successfully!");
@@ -702,14 +716,31 @@ export default function AdminDataPlansPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Plan Name (Display)</label>
-                  <Input 
-                    placeholder="e.g. 1GB - 30 Days"
-                    value={newPlan.plan_name}
-                    onChange={(e) => setNewPlan({...newPlan, plan_name: e.target.value})}
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Plan Name (Display)</label>
+                    <Input 
+                      placeholder="e.g. 1GB - 30 Days"
+                      value={newPlan.plan_name}
+                      onChange={(e) => setNewPlan({...newPlan, plan_name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Data Type Category</label>
+                    <select
+                      className="w-full axis-input p-2 rounded-md border border-border"
+                      value={newPlan.data_type}
+                      onChange={(e) => setNewPlan({...newPlan, data_type: e.target.value})}
+                    >
+                      <option value="">None / Uncategorized</option>
+                      <option value="SME">SME</option>
+                      <option value="SME2">SME2</option>
+                      <option value="GIFTING">GIFTING</option>
+                      <option value="CORPORATE GIFTING">CORPORATE GIFTING</option>
+                      <option value="AWOOF DATA">AWOOF DATA</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -730,6 +761,31 @@ export default function AdminDataPlansPage() {
                       value={newPlan.provider_plan_id}
                       onChange={(e) => setNewPlan({...newPlan, provider_plan_id: e.target.value})}
                       required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Fallback Provider</label>
+                    <select
+                      className="w-full axis-input p-2 rounded-md border border-border"
+                      value={newPlan.fallback_provider}
+                      onChange={(e) => setNewPlan({...newPlan, fallback_provider: e.target.value})}
+                    >
+                      <option value="none">None (No Fallback)</option>
+                      <option value="amigo">Amigo</option>
+                      <option value="smeplug">SMEPlug</option>
+                      <option value="clubkonnect">ClubKonnect</option>
+                      <option value="autosync">Autosync</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Fallback Plan ID</label>
+                    <Input 
+                      placeholder="e.g. 1001"
+                      value={newPlan.fallback_provider_plan_id}
+                      onChange={(e) => setNewPlan({...newPlan, fallback_provider_plan_id: e.target.value})}
                     />
                   </div>
                 </div>
