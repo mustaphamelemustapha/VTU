@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, PauseCircle, PlayCircle, RefreshCw, Wallet, X } from 'lucide-react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Eye, PauseCircle, PlayCircle, RefreshCw, Wallet, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   adminActivateUser,
   adminDeleteUser,
@@ -18,13 +19,23 @@ import { FilterBar } from '@/components/admin/filter-bar';
 import { AdminTable } from '@/components/admin/admin-table';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { ConfirmDialog } from '@/components/admin/confirm-dialog';
-import { EmptyState } from '@/components/admin/empty-state';
 
 export default function AdminUsersPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // URL State
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const search = searchParams.get('search') || '';
+  const role = searchParams.get('role') || 'all';
+  const status = searchParams.get('status') || 'all';
+
+  // Component State
   const [users, setUsers] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [query, setQuery] = useState(search);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedDetails, setSelectedDetails] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
@@ -32,27 +43,50 @@ export default function AdminUsersPage() {
 
   const activeRequestRef = useRef(0);
 
+  // Sync debounced search to URL
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(query);
+      if (query !== search) {
+        updateURL({ search: query, page: 1 });
+      }
     }, 300);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, search]); // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  const updateURL = useCallback((updates) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === '' || value === 'all' || (key === 'page' && value === 1)) {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    });
+    const queryString = params.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+  }, [searchParams, pathname, router]);
 
   const loadUsers = useCallback(async () => {
     const requestId = Date.now();
     activeRequestRef.current = requestId;
     setLoading(true);
     try {
-      const response = await adminGetUsers({ q: debouncedQuery || undefined, page: 1, page_size: 60 });
+      const response = await adminGetUsers({ 
+        q: search || undefined, 
+        role: role !== 'all' ? role : undefined,
+        status: status !== 'all' ? status : undefined,
+        page, 
+        page_size: 50 
+      });
       if (activeRequestRef.current !== requestId) return;
       setUsers(Array.isArray(response?.items) ? response.items : []);
+      setTotal(response?.total || 0);
     } finally {
       if (activeRequestRef.current === requestId) {
         setLoading(false);
       }
     }
-  }, [debouncedQuery]);
+  }, [search, role, status, page]);
 
   useEffect(() => {
     loadUsers().catch(() => setLoading(false));
@@ -112,6 +146,11 @@ export default function AdminUsersPage() {
       render: (row) => <span className="font-medium">{selectedDetails?.user?.id === row.id ? `₦${formatMoney(selectedDetails?.wallet?.balance || 0)}` : 'Open user'}</span>,
     },
     {
+      key: 'total_spending',
+      label: 'Total spending',
+      render: (row) => <span className="font-semibold text-emerald-600">₦{formatMoney(row.total_spending || 0)}</span>,
+    },
+    {
       key: 'referral_count',
       label: 'Referrals',
       render: (row) => <span className="font-semibold">{row.referral_count || 0} referred</span>,
@@ -153,6 +192,8 @@ export default function AdminUsersPage() {
     },
   ], [openUser, selectedDetails?.user?.id, selectedDetails?.wallet?.balance]);
 
+  const totalPages = Math.ceil(total / 50);
+
   return (
     <div className="space-y-5 pb-8">
       <AdminPageHeader
@@ -170,9 +211,58 @@ export default function AdminUsersPage() {
         searchValue={query}
         onSearchChange={setQuery}
         searchPlaceholder="Search by name, email, or phone"
-      />
+      >
+        <select
+          value={role}
+          onChange={(e) => updateURL({ role: e.target.value, page: 1 })}
+          className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        >
+          <option value="all">All Tiers</option>
+          <option value="user">User</option>
+          <option value="reseller">Reseller / Agent</option>
+          <option value="admin">Admin</option>
+        </select>
+        <select
+          value={status}
+          onChange={(e) => updateURL({ status: e.target.value, page: 1 })}
+          className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        >
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </FilterBar>
 
       <AdminTable columns={columns} rows={users} empty={loading ? 'Loading users...' : 'No users found.'} />
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-muted-foreground">
+            Showing {Math.min((page - 1) * 50 + 1, total)} to {Math.min(page * 50, total)} of {total} users
+          </p>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => updateURL({ page: page - 1 })}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => updateURL({ page: page + 1 })}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
