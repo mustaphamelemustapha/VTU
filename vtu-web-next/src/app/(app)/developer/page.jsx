@@ -66,6 +66,8 @@ export default function DeveloperPage() {
       setDeveloperState(prev => ({
         ...prev,
         api_public_key: data.api_public_key,
+        test_api_public_key: data.test_api_public_key,
+        test_api_secret_key: data.test_api_secret_key,
         has_keys: true
       }));
     } finally {
@@ -238,8 +240,8 @@ export default function DeveloperPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium leading-none text-muted-foreground">Test Public Key</label>
                   <div className="flex gap-2">
-                    <Input readOnly value={sandboxPublicKey} className="font-mono text-sm bg-secondary" />
-                    <Button variant="secondary" size="icon" onClick={() => copyToClipboard(sandboxPublicKey)}>
+                    <Input readOnly value={developerState.test_api_public_key} className="font-mono text-sm bg-secondary" />
+                    <Button variant="secondary" size="icon" onClick={() => copyToClipboard(developerState.test_api_public_key)}>
                       <Copy className="w-4 h-4" />
                     </Button>
                   </div>
@@ -247,9 +249,9 @@ export default function DeveloperPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium leading-none text-muted-foreground">Test Secret Key</label>
                   <div className="flex gap-2">
-                    <Input readOnly value={rawSecretKey ? rawSecretKey.replace('live_', 'test_') : "****************************************"} className="font-mono text-sm bg-secondary text-muted-foreground" />
+                    <Input readOnly value={rawSecretKey ? developerState.test_api_secret_key : "****************************************"} className="font-mono text-sm bg-secondary text-muted-foreground" />
                     {rawSecretKey && (
-                      <Button variant="secondary" size="icon" onClick={() => copyToClipboard(rawSecretKey.replace('live_', 'test_'))}>
+                      <Button variant="secondary" size="icon" onClick={() => copyToClipboard(developerState.test_api_secret_key)}>
                         <Copy className="w-4 h-4" />
                       </Button>
                     )}
