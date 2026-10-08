@@ -8,7 +8,7 @@ import { formatDateTime, formatMoney } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AdminPageHeader } from '@/components/admin/admin-page-header';
-import { PremiumDataTable } from '@/components/admin/premium-data-table';
+import { AdminTable } from '@/components/admin/admin-table';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -68,10 +68,20 @@ export default function AdminDataPlansPage() {
     load().catch(() => setLoading(false));
   }, [load]);
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const filtered = useMemo(() => {
-    if (!activeNetwork) return plans;
-    return plans.filter((plan) => String(plan?.network || '').toLowerCase() === activeNetwork);
-  }, [activeNetwork, plans]);
+    let result = plans;
+    if (activeNetwork) {
+      result = result.filter((plan) => String(plan?.network || '').toLowerCase() === activeNetwork);
+    }
+    if (searchQuery) {
+      result = result.filter((plan) => 
+        String(plan?.plan_name || '').toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return result;
+  }, [activeNetwork, plans, searchQuery]);
 
   const byNetwork = useMemo(
     () => plans.reduce((acc, item) => {
@@ -423,6 +433,15 @@ export default function AdminDataPlansPage() {
 
   const FilterControls = (
     <div className="flex items-center gap-3">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input 
+          placeholder="Search plan name..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-10 w-64 pl-9 rounded-xl"
+        />
+      </div>
       <select
         value={activeNetwork}
         onChange={(event) => setActiveNetwork(event.target.value)}
@@ -485,12 +504,13 @@ export default function AdminDataPlansPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <PremiumDataTable 
-          data={filtered} 
+        <div className="mb-4 flex justify-end">
+          {FilterControls}
+        </div>
+        <AdminTable 
+          rows={filtered} 
           columns={columns} 
-          searchKey="plan_name"
-          emptyMessage={loading ? 'Loading data plans...' : 'No plans available for the selected filter.'}
-          headerActions={FilterControls}
+          empty={loading ? 'Loading data plans...' : 'No plans available for the selected filter.'}
         />
       </motion.div>
 
