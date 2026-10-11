@@ -379,7 +379,9 @@ export function AuthPage({ initialMode, refCode: presetRef }) {
               {isRegister ? (
                 <>
                   By creating an account you agree to our{' '}
-                  <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">terms</Link>.
+                  <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">Terms</Link>
+                  {' '}and{' '}
+                  <Link href="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">Privacy Policy</Link>.
                   <br />
                   Already have one?{' '}
                   <Link href="/login" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">Sign in</Link>
