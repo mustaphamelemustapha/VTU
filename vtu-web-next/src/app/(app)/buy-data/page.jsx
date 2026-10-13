@@ -123,11 +123,31 @@ export default function BuyDataPage() {
         apiFetch('/wallet/me'),
       ]);
       
+      let list = [];
       if (plansRes.status === 'fulfilled') {
         const val = plansRes.value;
-        const list = Array.isArray(val) ? val : (val?.items || val?.data || val?.plans || []);
-        setPlans(Array.isArray(list) ? list : []);
+        list = Array.isArray(val) ? val : (val?.items || val?.data || val?.plans || []);
+      } else {
+        console.error('Data plans fetch error:', plansRes.reason);
       }
+      
+      // Resilient fallback: if public endpoint returned empty or failed, attempt admin endpoint if user has permissions
+      if (!list || list.length === 0) {
+        try {
+          const adminPlans = await apiFetch('/admin/data-plans');
+          if (Array.isArray(adminPlans) && adminPlans.length > 0) {
+            list = adminPlans
+              .filter(p => p.is_active !== false)
+              .map(p => ({
+                ...p,
+                price: p.display_price ?? p.base_price ?? 0,
+              }));
+          }
+        } catch (_) {
+          // Normal customer won't have admin access, ignore
+        }
+      }
+      setPlans(Array.isArray(list) ? list : []);
       
       if (walletRes.status === 'fulfilled') setWallet(walletRes.value);
     } catch (err) {
