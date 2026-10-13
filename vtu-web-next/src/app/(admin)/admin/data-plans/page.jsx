@@ -103,8 +103,8 @@ export default function AdminDataPlansPage() {
   const handleDeleteAutosynced = useCallback(async (scope = 'autosynced') => {
     const isAll = scope === 'all';
     const msg = isAll
-      ? "DANGER: This will permanently DELETE ALL data plans from the database. Are you sure you want to start completely fresh?"
-      : "This will permanently delete all auto-synced data plans (Amigo, ClubKonnect, Autosync, and legacy plans) from your database, keeping only your manually configured integrated plans (e.g. SMEPlug, MELE DATA). Proceed?";
+      ? "DANGER: This will permanently DELETE ALL data plans from the database. Are you sure you want to completely clear the entire catalog?"
+      : "This will permanently delete all auto-synced plans (including Talk More voice bundles, Amigo, ClubKonnect, Autosync, and legacy plans) from your database, keeping only your intentional data plans. Proceed?";
     if (!window.confirm(msg)) return;
     setCleaning(true);
     try {
@@ -514,6 +514,15 @@ export default function AdminDataPlansPage() {
             >
               <Trash2 className="mr-2 h-4 w-4" />
               {cleaning ? 'Deleting...' : 'Delete Auto-Synced Plans'}
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="rounded-xl bg-red-600/15 text-red-600 hover:bg-red-600/25 border border-red-600/30" 
+              onClick={() => handleDeleteAutosynced('all')} 
+              disabled={cleaning || syncing || toggling === 'all'}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Wipe All Plans
             </Button>
             <Button variant="destructive" className="rounded-xl" onClick={handleDisableAll} disabled={cleaning || syncing || toggling === 'all'}>
               {toggling === 'all' ? 'Disabling...' : 'Disable All Active'}

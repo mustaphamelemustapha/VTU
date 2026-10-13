@@ -148,9 +148,13 @@ export default function BuyDataPage() {
   );
 
   useEffect(() => {
-    if (activeNetwork !== 'all' && !planGroups.some((group) => group.network === activeNetwork)) {
-      if (planGroups.length > 0) {
-        // Only switch if the currently active network has no plans but others do
+    if (planGroups.length > 0) {
+      const currentGroup = planGroups.find((group) => group.network === activeNetwork);
+      if (!currentGroup || !currentGroup.plans.length) {
+        const firstWithPlans = planGroups.find((group) => group.plans && group.plans.length > 0);
+        if (firstWithPlans) {
+          setActiveNetwork(firstWithPlans.network);
+        }
       }
     }
   }, [activeNetwork, planGroups]);
@@ -159,32 +163,9 @@ export default function BuyDataPage() {
     return planGroups.find((group) => group.network === activeNetwork) || null;
   }, [activeNetwork, planGroups]);
 
-  const availableDataTypes = useMemo(() => {
-    if (!activeGroup || !activeGroup.plans) return [];
-    const types = new Set();
-    for (const p of activeGroup.plans) {
-      types.add(p.data_type || 'ALL');
-    }
-    // If 'ALL' is the only type, or if there's a mix, sort them logically. Let's just return sorted array.
-    const arr = Array.from(types).sort();
-    // Prioritize standard types if present, else just sort.
-    return arr;
-  }, [activeGroup]);
-
-  const [activeDataType, setActiveDataType] = useState('');
-
-  // When network changes or data types change, reset active data type to the first one
-  useEffect(() => {
-    if (activeDataType && !availableDataTypes.includes(activeDataType)) {
-      setActiveDataType('');
-    }
-  }, [availableDataTypes, activeDataType]);
-
   const visiblePlans = useMemo(() => {
-    if (!activeGroup) return [];
-    if (!activeDataType) return [];
-    return activeGroup.plans.filter((p) => (p.data_type || 'ALL') === activeDataType);
-  }, [activeGroup, activeDataType]);
+    return activeGroup?.plans || [];
+  }, [activeGroup]);
 
   const summaryNetwork = selected?.network || activeNetwork;
   const summaryPlanName = selected?.plan_name || selected?.plan_code || '—';
@@ -231,7 +212,7 @@ export default function BuyDataPage() {
           <Button
             variant="secondary"
             onClick={() => load()}
-            className="border-border bg-secondary text-muted-foreground hover:bg-secondary hover:text-foreground"
+            className="border-white/10 bg-background/50 text-muted-foreground hover:bg-card hover:text-foreground backdrop-blur-sm"
           >
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
             Refresh plans
@@ -239,9 +220,10 @@ export default function BuyDataPage() {
         </div>
       </div>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card className="overflow-hidden border-border bg-card shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
-          <CardContent className="space-y-6 p-4 md:space-y-8 md:p-7">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <Card className="relative overflow-hidden border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[6rem] -z-10 pointer-events-none" />
+          <CardContent className="relative z-10 space-y-6 p-5 md:space-y-8 md:p-8">
             <section className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -272,14 +254,20 @@ export default function BuyDataPage() {
                 <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Phone number</div>
                 <div className="mt-2 text-sm text-muted-foreground">Enter the recipient phone number.</div>
               </div>
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="08012345678"
-                className="h-[52px] rounded-2xl border-border bg-input text-base text-foreground placeholder:text-muted-foreground focus:border-primary/45 focus:ring-amber-500/10 md:h-12"
-              />
+              <div className="relative group">
+                <Input
+                  type="tel"
+                  placeholder="e.g. 08012345678"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    if (message) setMessage('');
+                  }}
+                  disabled={busy}
+                  className="h-[52px] md:h-14 bg-background/50 backdrop-blur-sm text-lg font-mono tracking-wider border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all rounded-xl"
+                />
+                <div className="absolute inset-0 -z-10 bg-primary/5 rounded-xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+              </div>
               {phoneError ? (
                 <p className="text-xs font-medium text-rose-300">{phoneError}</p>
               ) : (
@@ -300,29 +288,6 @@ export default function BuyDataPage() {
                 </Badge>
               </div>
 
-              {availableDataTypes.length > 1 && (
-                <div className="flex flex-wrap gap-2 pt-2 pb-1">
-                  {availableDataTypes.map((type) => {
-                    const isSelected = activeDataType === type;
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setActiveDataType(type)}
-                        className={cn(
-                          "px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors border",
-                          isSelected 
-                            ? "bg-primary text-primary-foreground border-primary" 
-                            : "bg-secondary text-muted-foreground border-border hover:bg-secondary/80 hover:text-foreground"
-                        )}
-                      >
-                        {type === 'ALL' ? 'General' : type}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
               {loading ? (
                 <div className="grid gap-3 md:grid-cols-2">
                   {Array.from({ length: 4 }).map((_, idx) => (
@@ -332,11 +297,8 @@ export default function BuyDataPage() {
               ) : null}
 
               {!loading && !visiblePlans.length ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground border border-dashed border-border rounded-xl bg-card">
-                  <Database className="h-10 w-10 mb-3 opacity-20" />
-                  {!activeDataType 
-                    ? "Please select a Data Type Category above to view available plans."
-                    : "No plans available for this network or category."}
+                <div className="rounded-[22px] border border-dashed border-border bg-secondary px-4 py-10 text-center text-sm text-muted-foreground">
+                  No bundles are enabled for {networkLabel(activeNetwork)} right now.
                 </div>
               ) : null}
 
