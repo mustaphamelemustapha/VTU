@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE = 'https://vtu-backend-8gsi.onrender.com/api/v1';
+const DEFAULT_API_BASE = 'https://api.meledata.ng/api/v1';
 const TOKEN_KEY = 'axisvtu_access_token';
 const REFRESH_KEY = 'axisvtu_refresh_token';
 const PROFILE_KEY = 'axisvtu_profile';
@@ -192,13 +192,21 @@ export async function apiFetch(path, options = {}) {
   const headers = { ...(options.headers || {}) };
   const token = getToken();
   if (token && !headers.Authorization) headers.Authorization = `Bearer ${token}`;
-  if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  let body = options.body;
+  if (body !== undefined && body !== null) {
+    if (typeof body === 'object' && !(body instanceof FormData) && !(body instanceof Blob)) {
+      body = JSON.stringify(body);
+    }
+    if (!headers['Content-Type'] && !(body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+  }
   let res;
   try {
     res = await fetch(`${base}${path}`, {
       method,
       headers,
-      body: options.body,
+      body,
       cache: 'no-store',
       signal: controller.signal,
     });
@@ -256,7 +264,7 @@ export async function registerRequest(payload) {
 export async function forgotPasswordRequest(email) {
   return apiFetch('/auth/forgot-password', {
     method: 'POST',
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ identifier: email }),
   });
 }
 
@@ -286,6 +294,10 @@ function toQuery(params = {}) {
 
 export async function adminGetAnalytics() {
   return apiFetch('/admin/analytics');
+}
+
+export async function adminGetProviderBalances() {
+  return apiFetch('/admin/provider-balances');
 }
 
 export async function adminGetUsers(params = {}) {
@@ -343,6 +355,13 @@ export async function adminUpdateReport(reportId, payload) {
   });
 }
 
+export async function adminCreatePromo(payload) {
+  return apiFetch('/promos/admin/create', {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  });
+}
+
 export async function adminGetPricingRules() {
   return apiFetch('/admin/pricing');
 }
@@ -376,6 +395,22 @@ export async function adminCreateBroadcast(payload) {
   });
 }
 
+export async function adminSendPushOnly(payload) {
+  return apiFetch('/notifications/broadcast/admin/push-only', {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  });
+}
+
+export async function adminUploadBroadcastImage(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  return apiFetch('/notifications/broadcast/admin/upload-image', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
 export async function adminUpdateBroadcast(id, payload) {
   return apiFetch(`/notifications/broadcast/admin/${id}`, {
     method: 'PATCH',
@@ -389,6 +424,12 @@ export async function adminSyncDataPlans() {
 
 export async function adminCleanLegacyDataPlans() {
   return apiFetch('/admin/data-plans/clean-legacy', { method: 'POST' });
+}
+
+export async function adminDeleteAutosyncedPlans(scope = 'autosynced') {
+  return apiFetch(`/admin/data-plans/delete-autosynced?scope=${encodeURIComponent(scope)}`, {
+    method: 'POST',
+  });
 }
 
 export async function adminAdjustWallet(payload) {
@@ -471,4 +512,41 @@ export async function adminGetReferrals(params = {}) {
 
 export async function adminGetAuditLogs(params = {}) {
   return apiFetch(`/admin/audit-logs${toQuery(params)}`);
+}
+
+export async function adminGetFinanceOverview() {
+  return apiFetch('/admin/finance/overview');
+}
+
+export async function adminGetFinanceLedger(params = {}) {
+  return apiFetch(`/admin/finance/ledger${toQuery(params)}`);
+}
+
+export async function adminCreateFinanceLedgerEntry(payload) {
+  return apiFetch('/admin/finance/ledger', {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  });
+}
+
+export async function adminGetAgents(params = {}) {
+  return apiFetch(`/admin/agents${toQuery(params)}`);
+}
+
+export async function adminGetAmbassadors(params = {}) {
+  return apiFetch(`/admin/ambassadors${toQuery(params)}`);
+}
+
+export async function adminPayAmbassadorCommission(payload) {
+  return apiFetch('/admin/ambassadors/pay-commission', {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  });
+}
+
+export async function adminUpdateReferralCode(payload) {
+  return apiFetch('/admin/users/referral-code', {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  });
 }
