@@ -518,6 +518,10 @@ export async function adminGetFinanceOverview() {
   return apiFetch('/admin/finance/overview');
 }
 
+export async function adminGetLeakAudit() {
+  return apiFetch('/admin/finance/leak-audit');
+}
+
 export async function adminGetFinanceLedger(params = {}) {
   return apiFetch(`/admin/finance/ledger${toQuery(params)}`);
 }
