@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Eye, PauseCircle, PlayCircle, RefreshCw, Wallet, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, PauseCircle, PlayCircle, RefreshCw, Wallet, X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import {
   adminActivateUser,
   adminDeleteUser,
@@ -20,7 +20,7 @@ import { AdminTable } from '@/components/admin/admin-table';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { ConfirmDialog } from '@/components/admin/confirm-dialog';
 
-export default function AdminUsersPage() {
+function AdminUsersPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -40,6 +40,10 @@ export default function AdminUsersPage() {
   const [selectedDetails, setSelectedDetails] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [dataPlans, setDataPlans] = useState([]);
+  const [pricingOverrides, setPricingOverrides] = useState([]);
+  const [overrideForm, setOverrideForm] = useState({ data_plan_id: '', custom_price: '' });
+  const [overrideBusy, setOverrideBusy] = useState(false);
 
   const activeRequestRef = useRef(0);
 
@@ -95,13 +99,57 @@ export default function AdminUsersPage() {
   const openUser = useCallback(async (user) => {
     setSelectedUser(user);
     setSelectedDetails(null);
+    setPricingOverrides([]);
+    setOverrideForm({ data_plan_id: '', custom_price: '' });
     try {
-      const details = await adminGetUserDetails(user.id);
+      const { adminGetDataPlans, adminGetPricingOverrides } = await import('@/lib/api');
+      const [details, plans, overrides] = await Promise.all([
+        adminGetUserDetails(user.id),
+        adminGetDataPlans().catch(() => []),
+        adminGetPricingOverrides(user.id).catch(() => []),
+      ]);
       setSelectedDetails(details);
+      if (Array.isArray(plans)) setDataPlans(plans);
+      if (Array.isArray(overrides)) setPricingOverrides(overrides);
     } catch {
       setSelectedDetails({ user, wallet: { balance: 0 }, recent_transactions: [] });
     }
   }, []);
+
+  const handleSaveOverride = async (e) => {
+    e.preventDefault();
+    if (!overrideForm.data_plan_id || !overrideForm.custom_price || !selectedUser) return;
+    
+    setOverrideBusy(true);
+    try {
+      const { adminSetPricingOverride, adminGetPricingOverrides } = await import('@/lib/api');
+      await adminSetPricingOverride(selectedUser.id, {
+        data_plan_id: parseInt(overrideForm.data_plan_id, 10),
+        custom_price: parseFloat(overrideForm.custom_price)
+      });
+      const overrides = await adminGetPricingOverrides(selectedUser.id);
+      setPricingOverrides(overrides || []);
+      setOverrideForm({ data_plan_id: '', custom_price: '' });
+    } catch (err) {
+      console.error("Failed to save pricing override", err);
+      alert(err?.message || "Failed to save pricing override");
+    } finally {
+      setOverrideBusy(false);
+    }
+  };
+
+  const handleDeleteOverride = async (overrideId) => {
+    if (!selectedUser || !confirm("Delete this pricing override?")) return;
+    try {
+      const { adminDeletePricingOverride, adminGetPricingOverrides } = await import('@/lib/api');
+      await adminDeletePricingOverride(selectedUser.id, overrideId);
+      const overrides = await adminGetPricingOverrides(selectedUser.id);
+      setPricingOverrides(overrides || []);
+    } catch (err) {
+      console.error("Failed to delete pricing override", err);
+      alert(err?.message || "Failed to delete pricing override");
+    }
+  };
 
   const runAction = useCallback(async () => {
     if (!confirmAction) return;
@@ -111,11 +159,16 @@ export default function AdminUsersPage() {
         await adminSuspendUser(confirmAction.user.id);
       } else if (confirmAction.type === 'delete') {
         await adminDeleteUser(confirmAction.user.id);
-      } else if (confirmAction.type === 'upgrade_reseller' || confirmAction.type === 'downgrade_user') {
+      } else if (['set_customer', 'set_agent', 'set_ambassador'].includes(confirmAction.type)) {
+        const newRole = confirmAction.type.replace('set_', '');
         await adminUpdateUserRole({ 
           user_id: confirmAction.user.id, 
-          role: confirmAction.type === 'upgrade_reseller' ? 'reseller' : 'user' 
+          role: newRole 
         });
+      } else if (confirmAction.type === 'upgrade_developer') {
+        const { adminUpgradeDeveloper } = await import('@/lib/api');
+        await adminUpgradeDeveloper(confirmAction.user.id);
+        alert('Successfully upgraded user to Developer!');
       } else if (confirmAction.type === 'approve_developer') {
         const { adminApproveDeveloper } = await import('@/lib/api');
         await adminApproveDeveloper(confirmAction.user.id);
@@ -218,8 +271,9 @@ export default function AdminUsersPage() {
           className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           <option value="all">All Tiers</option>
-          <option value="user">User</option>
-          <option value="reseller">Reseller / Agent</option>
+          <option value="customer">Customer</option>
+          <option value="agent">Agent</option>
+          <option value="ambassador">Ambassador</option>
           <option value="admin">Admin</option>
         </select>
         <select
@@ -287,22 +341,41 @@ export default function AdminUsersPage() {
                 <div className="text-right space-y-2">
                   <div><StatusBadge status={selectedUser.is_active ? 'active' : 'suspended'} /></div>
                   <div className="pt-2 flex flex-col gap-2 items-end">
-                    {String(selectedDetails?.user?.role || selectedUser?.role).toLowerCase() !== 'reseller' ? (
+                    <div className="flex gap-2">
                       <Button
-                        variant="default"
+                        variant="outline"
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => setConfirmAction({ type: 'upgrade_reseller', user: selectedUser })}
+                        className={String(selectedDetails?.user?.role || selectedUser?.role).toLowerCase() === 'customer' ? 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30' : ''}
+                        onClick={() => setConfirmAction({ type: 'set_customer', user: selectedUser })}
+                      >
+                        Customer
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={String(selectedDetails?.user?.role || selectedUser?.role).toLowerCase() === 'agent' ? 'bg-green-50 text-green-600 border-green-200 dark:bg-green-900/30' : ''}
+                        onClick={() => setConfirmAction({ type: 'set_agent', user: selectedUser })}
                       >
                         Upgrade to Agent
                       </Button>
-                    ) : (
                       <Button
-                        variant="destructive"
+                        variant="outline"
                         size="sm"
-                        onClick={() => setConfirmAction({ type: 'downgrade_user', user: selectedUser })}
+                        className={String(selectedDetails?.user?.role || selectedUser?.role).toLowerCase() === 'ambassador' ? 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/30' : ''}
+                        onClick={() => setConfirmAction({ type: 'set_ambassador', user: selectedUser })}
                       >
-                        Downgrade to User
+                        Ambassador
+                      </Button>
+                    </div>
+
+                    {!(selectedDetails?.user?.is_developer || selectedUser?.is_developer) && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8"
+                        onClick={() => setConfirmAction({ type: 'upgrade_developer', user: selectedUser })}
+                      >
+                        Upgrade to Developer
                       </Button>
                     )}
 
@@ -374,6 +447,84 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
 
+                  <div className="space-y-3 mt-4">
+                    <h4 className="font-semibold text-sm">Custom Pricing Overrides</h4>
+                    <div className="rounded-xl border bg-card p-4 shadow-sm">
+                      <form onSubmit={handleSaveOverride} className="flex gap-2 items-end mb-4">
+                        <div className="flex-1">
+                          <label className="text-[10px] font-medium text-muted-foreground block mb-1">Data Plan</label>
+                          <select 
+                            className="w-full text-sm rounded-md border border-input bg-background px-3 h-8 text-foreground"
+                            value={overrideForm.data_plan_id}
+                            onChange={e => setOverrideForm(prev => ({...prev, data_plan_id: e.target.value}))}
+                            required
+                          >
+                            <option value="">Select a plan</option>
+                            {dataPlans.map(plan => (
+                              <option key={plan.id} value={plan.id}>
+                                {plan.network} - {plan.plan_name} ({plan.data_size})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="w-32">
+                          <label className="text-[10px] font-medium text-muted-foreground block mb-1">Custom Price (₦)</label>
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            className="w-full text-sm rounded-md border border-input bg-background px-3 h-8 text-foreground"
+                            value={overrideForm.custom_price}
+                            onChange={e => setOverrideForm(prev => ({...prev, custom_price: e.target.value}))}
+                            placeholder="e.g. 145"
+                            required
+                          />
+                        </div>
+                        <Button type="submit" size="sm" className="h-8" disabled={overrideBusy || !overrideForm.data_plan_id || !overrideForm.custom_price}>
+                          {overrideBusy ? 'Saving...' : 'Save'}
+                        </Button>
+                      </form>
+
+                      {pricingOverrides.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm text-left border-collapse">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="py-2 px-2 font-medium text-muted-foreground">Plan ID</th>
+                                <th className="py-2 px-2 font-medium text-muted-foreground">Plan</th>
+                                <th className="py-2 px-2 font-medium text-muted-foreground">Custom Price</th>
+                                <th className="py-2 px-2 font-medium text-muted-foreground text-right">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {pricingOverrides.map(override => {
+                                const p = dataPlans.find(d => d.id === override.data_plan_id);
+                                return (
+                                  <tr key={override.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                                    <td className="py-2 px-2 text-muted-foreground">#{override.data_plan_id}</td>
+                                    <td className="py-2 px-2 font-medium">{p ? `${p.network} - ${p.plan_name}` : 'Unknown Plan'}</td>
+                                    <td className="py-2 px-2 text-emerald-600 font-semibold">₦{formatMoney(override.custom_price)}</td>
+                                    <td className="py-2 px-2 text-right">
+                                      <button 
+                                        type="button" 
+                                        onClick={() => handleDeleteOverride(override.id)} 
+                                        className="text-red-500 hover:text-red-700 p-1"
+                                        title="Delete override"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground py-2">No custom pricing overrides set for this user.</div>
+                      )}
+                    </div>
+                  </div>
+
                   {selectedDetails?.recent_transactions?.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="font-semibold text-sm">Recent Transactions (Max 20)</h4>
@@ -436,13 +587,17 @@ export default function AdminUsersPage() {
         title={`${
           confirmAction?.type === 'suspend' ? 'Suspend' : 
           confirmAction?.type === 'delete' ? 'Permanently Delete' : 
+          confirmAction?.type === 'upgrade_developer' ? 'Upgrade to Developer' :
           confirmAction?.type === 'approve_developer' ? 'Approve Developer API' :
           confirmAction?.type === 'suspend_developer' ? 'Suspend Developer API' :
+          confirmAction?.type?.startsWith('set_') ? 'Change User Role' :
           'Activate'
         } user account`}
         description={
           confirmAction?.type === 'delete'
             ? `Are you absolutely sure you want to delete ${confirmAction?.user?.email}? This will suffix their credentials and they will no longer be able to log in. This action is irreversible.`
+            : confirmAction?.type === 'upgrade_developer'
+            ? `You are about to upgrade ${confirmAction?.user?.email} to a Developer account with API credentials generated.`
             : confirmAction?.type === 'approve_developer'
             ? `You are about to approve developer API key access for ${confirmAction?.user?.email}. They will receive reseller privileges.`
             : confirmAction?.type === 'suspend_developer'
@@ -454,6 +609,8 @@ export default function AdminUsersPage() {
             ? 'Suspend user'
             : confirmAction?.type === 'delete'
             ? 'Yes, delete user'
+            : confirmAction?.type === 'upgrade_developer'
+            ? 'Upgrade to Developer'
             : confirmAction?.type === 'approve_developer'
             ? 'Approve API'
             : confirmAction?.type === 'suspend_developer'
@@ -466,5 +623,14 @@ export default function AdminUsersPage() {
         onConfirm={runAction}
       />
     </div>
+  );
+}
+
+import { Suspense } from 'react';
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">Loading Users...</div>}>
+      <AdminUsersPageContent />
+    </Suspense>
   );
 }
