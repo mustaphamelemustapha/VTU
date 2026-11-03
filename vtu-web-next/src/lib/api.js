@@ -398,6 +398,12 @@ export async function adminUpdateCommissionSettings(payload) {
   });
 }
 
+export async function adminReconcileAgentCommissions() {
+  return apiFetch('/admin/settings/commissions/reconcile-agents', {
+    method: 'POST',
+  });
+}
+
 export async function adminFundWallet(payload) {
   return apiFetch('/admin/fund-wallet', {
     method: 'POST',

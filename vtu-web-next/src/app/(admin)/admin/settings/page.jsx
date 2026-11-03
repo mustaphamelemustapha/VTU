@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, RefreshCw, ShieldCheck, X, Plus, Award, CheckCircle2, Sparkles, UserCheck } from 'lucide-react';
-import { adminGetAnalytics, adminGetPricingRules, adminGetServiceToggles, adminUpdatePricingRule, adminUpdateServiceToggle, adminGetCommissionSettings, adminUpdateCommissionSettings, apiFetch, getProfile } from '@/lib/api';
+import { adminGetAnalytics, adminGetPricingRules, adminGetServiceToggles, adminUpdatePricingRule, adminUpdateServiceToggle, adminGetCommissionSettings, adminUpdateCommissionSettings, adminReconcileAgentCommissions, apiFetch, getProfile } from '@/lib/api';
 import { formatDateTime, formatMoney } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,8 @@ export default function AdminSettingsPage() {
   });
   const [savingCommission, setSavingCommission] = useState(false);
   const [commissionSavedMsg, setCommissionSavedMsg] = useState('');
+  const [reconciling, setReconciling] = useState(false);
+  const [reconcileMsg, setReconcileMsg] = useState('');
 
   // Margin Edit State
   const [editingMarginFor, setEditingMarginFor] = useState(null);
@@ -75,6 +77,20 @@ export default function AdminSettingsPage() {
       alert(err?.message || 'Failed to update commission settings');
     } finally {
       setSavingCommission(false);
+    }
+  };
+
+  const handleReconcileCommissions = async () => {
+    setReconciling(true);
+    setReconcileMsg('');
+    try {
+      const res = await adminReconcileAgentCommissions();
+      setReconcileMsg(`Credited ${res.count || 0} missing agent cashback!`);
+      setTimeout(() => setReconcileMsg(''), 5000);
+    } catch (err) {
+      alert(err?.message || 'Failed to reconcile agent commissions');
+    } finally {
+      setReconciling(false);
     }
   };
 
@@ -239,23 +255,42 @@ export default function AdminSettingsPage() {
             </div>
 
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-border/40">
-              {commissionSavedMsg ? (
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {commissionSavedMsg}
-                </div>
-              ) : (
-                <div className="text-xs text-muted-foreground">
-                  Saved settings persist in the database and override code defaults for this tenant.
-                </div>
-              )}
-              <Button
-                onClick={handleSaveCommission}
-                disabled={savingCommission}
-                className="rounded-xl h-10 px-5 font-bold shadow-sm"
-              >
-                {savingCommission ? 'Saving...' : 'Save Commission Rules'}
-              </Button>
+              <div className="flex flex-col gap-1">
+                {commissionSavedMsg ? (
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {commissionSavedMsg}
+                  </div>
+                ) : reconcileMsg ? (
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {reconcileMsg}
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">
+                    Saved settings persist in the database and override code defaults for this tenant.
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleReconcileCommissions}
+                  disabled={reconciling}
+                  className="rounded-xl h-10 px-4 text-xs font-bold border-border/70 hover:bg-secondary"
+                  title="Scan recent data transactions by agents and award any missing 2% cashback"
+                >
+                  {reconciling ? 'Scanning...' : 'Reconcile Past Agent Cashback'}
+                </Button>
+                <Button
+                  onClick={handleSaveCommission}
+                  disabled={savingCommission}
+                  className="rounded-xl h-10 px-5 font-bold shadow-sm"
+                >
+                  {savingCommission ? 'Saving...' : 'Save Commission Rules'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
