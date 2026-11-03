@@ -9,10 +9,13 @@ import {
   Check,
   CheckCircle2,
   Copy,
+  FileText,
   Landmark,
   Loader2,
   Lock,
+  Printer,
   Search,
+  Share2,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -26,6 +29,45 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { formatMoney } from '@/lib/format';
 
+const DEFAULT_BANKS = [
+  { name: 'Access Bank', code: '044', slug: 'access-bank' },
+  { name: 'Guaranty Trust Bank (GTBank)', code: '058', slug: 'guaranty-trust-bank' },
+  { name: 'Zenith Bank', code: '057', slug: 'zenith-bank' },
+  { name: 'United Bank for Africa (UBA)', code: '033', slug: 'united-bank-for-africa' },
+  { name: 'First Bank of Nigeria', code: '011', slug: 'first-bank-of-nigeria' },
+  { name: 'OPay (Paycom)', code: '999992', slug: 'paycom' },
+  { name: 'PalmPay', code: '999991', slug: 'palmpay' },
+  { name: 'Moniepoint MFB', code: '50515', slug: 'moniepoint-mfb-ng' },
+  { name: 'Kuda Bank', code: '50211', slug: 'kuda-bank' },
+  { name: 'Fidelity Bank', code: '070', slug: 'fidelity-bank' },
+  { name: 'Stanbic IBTC Bank', code: '221', slug: 'stanbic-ibtc-bank' },
+  { name: 'Sterling Bank', code: '232', slug: 'sterling-bank' },
+  { name: 'Union Bank of Nigeria', code: '032', slug: 'union-bank-of-nigeria' },
+  { name: 'Wema Bank (ALAT)', code: '035', slug: 'wema-bank' },
+  { name: 'First City Monument Bank (FCMB)', code: '214', slug: 'first-city-monument-bank' },
+  { name: 'Polaris Bank', code: '076', slug: 'polaris-bank' },
+  { name: 'Keystone Bank', code: '082', slug: 'keystone-bank' },
+  { name: 'Jaiz Bank', code: '301', slug: 'jaiz-bank' },
+  { name: 'TAJ Bank', code: '302', slug: 'taj-bank' },
+  { name: 'VFD Microfinance Bank', code: '566', slug: 'vfd' },
+  { name: 'FairMoney Microfinance Bank', code: '51318', slug: 'fairmoney-mfb' },
+  { name: 'Rubies MFB', code: '125', slug: 'rubies-mfb' },
+  { name: 'Carbon', code: '565', slug: 'carbon' },
+  { name: 'Titan Trust Bank', code: '102', slug: 'titan-bank' },
+  { name: 'Providus Bank', code: '101', slug: 'providus-bank' },
+];
+
+const POPULAR_BANKS = [
+  { name: 'OPay', code: '999992', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
+  { name: 'PalmPay', code: '999991', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
+  { name: 'Moniepoint', code: '50515', color: 'bg-sky-500/10 text-sky-600 border-sky-500/30' },
+  { name: 'Kuda', code: '50211', color: 'bg-purple-500/10 text-purple-600 border-purple-500/30' },
+  { name: 'GTBank', code: '058', color: 'bg-orange-500/10 text-orange-600 border-orange-500/30' },
+  { name: 'Zenith', code: '057', color: 'bg-red-500/10 text-red-600 border-red-500/30' },
+  { name: 'Access', code: '044', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
+  { name: 'UBA', code: '033', color: 'bg-rose-500/10 text-rose-600 border-rose-500/30' },
+];
+
 export function WithdrawModal({
   open,
   onClose,
@@ -34,7 +76,7 @@ export function WithdrawModal({
   walletBalance = 0,
   userProfile = null,
 }) {
-  const [banks, setBanks] = useState([]);
+  const [banks, setBanks] = useState(DEFAULT_BANKS);
   const [loadingBanks, setLoadingBanks] = useState(false);
   const [bankSearch, setBankSearch] = useState('');
   const [selectedBank, setSelectedBank] = useState(null);
@@ -46,11 +88,16 @@ export function WithdrawModal({
   const [resolveError, setResolveError] = useState('');
 
   const [amount, setAmount] = useState('');
+  const [narration, setNarration] = useState('');
   const [pin, setPin] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [receipt, setReceipt] = useState(null);
+
+  // Copy feedbacks
   const [copiedRef, setCopiedRef] = useState(false);
+  const [copiedSessionId, setCopiedSessionId] = useState(false);
+  const [copiedAccount, setCopiedAccount] = useState(false);
 
   const brand = getActiveBrand();
   const isMeleData = brand?.key === 'meledata';
@@ -96,10 +143,13 @@ export function WithdrawModal({
       setResolvedAccountName('');
       setResolveError('');
       setAmount('');
+      setNarration('');
       setPin('');
       setSubmitError('');
       setReceipt(null);
       setCopiedRef(false);
+      setCopiedSessionId(false);
+      setCopiedAccount(false);
     }
   }, [open]);
 
@@ -199,6 +249,7 @@ export function WithdrawModal({
           account_name: resolvedAccountName,
           amount: numAmount,
           pin: pin.trim(),
+          narration: narration.trim() || undefined,
         }),
       });
 
@@ -212,15 +263,29 @@ export function WithdrawModal({
     }
   };
 
-  const copyRef = async (ref) => {
-    if (!ref) return;
+  const copyToClipboard = async (text, setter) => {
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(String(ref));
-      setCopiedRef(true);
-      setTimeout(() => setCopiedRef(false), 2000);
+      await navigator.clipboard.writeText(String(text));
+      setter(true);
+      setTimeout(() => setter(false), 2000);
     } catch {
-      setCopiedRef(false);
+      setter(false);
     }
+  };
+
+  const formatReceiptDate = (iso) => {
+    const d = iso ? new Date(iso) : new Date();
+    return new Intl.DateTimeFormat('en-GB', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    }).format(d);
   };
 
   if (!open || !isMeleData) return null;
@@ -297,62 +362,132 @@ export function WithdrawModal({
             </div>
           </div>
         ) : receipt ? (
-          /* 2. SUCCESS RECEIPT SCREEN */
+          /* 2. BANK STANDARD SUCCESS RECEIPT */
           <div className="py-2 flex flex-col items-center text-center overflow-y-auto">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 mb-3 shadow-inner">
-              <CheckCircle2 className="h-9 w-9" />
+            {/* Header Badge */}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary font-black text-xs">
+                MD
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-black tracking-wider uppercase text-foreground">
+                  MELE DATA
+                </div>
+                <div className="text-[10px] text-muted-foreground font-semibold">
+                  TRANSFER ADVICE
+                </div>
+              </div>
+              <Badge className="ml-auto bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-black tracking-wide">
+                ● SUCCESSFUL
+              </Badge>
             </div>
 
-            <h3 className="text-2xl font-black tracking-tight text-foreground">
-              Withdrawal Initiated
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              {receipt.message || 'Funds are on their way to your bank account.'}
-            </p>
-
-            <div className="mt-3 text-3xl font-black text-foreground tracking-tight">
-              {formatMoney(receipt.amount)}
+            {/* Amount Banner */}
+            <div className="mt-2 w-full rounded-2xl bg-primary/[0.04] border border-primary/15 p-4 text-center">
+              <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                Transaction Amount
+              </div>
+              <div className="text-3xl font-black text-foreground tracking-tight mt-1">
+                {formatMoney(receipt.amount)}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1 font-medium">
+                Fee: {formatMoney(receipt.fee)} • Total Debit: {formatMoney(receipt.total_debited)}
+              </div>
             </div>
 
-            <div className="mt-5 w-full rounded-2xl border border-border/60 bg-secondary/30 p-4 text-left space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Recipient Name</span>
-                <span className="font-bold text-foreground">{receipt.account_name}</span>
+            {/* Standard Bank Breakdown */}
+            <div className="mt-4 w-full rounded-2xl border border-border/60 bg-secondary/30 p-4 text-left space-y-2.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Transaction Status</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">Successful</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Bank Name</span>
-                <span className="font-bold text-foreground">{receipt.bank_name}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Beneficiary Name</span>
+                <span className="font-bold text-foreground text-right">{receipt.account_name}</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Destination Bank</span>
+                <span className="font-semibold text-foreground text-right">{receipt.bank_name}</span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Account Number</span>
-                <span className="font-mono font-bold text-foreground">{receipt.account_number}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Transfer Fee</span>
-                <span className="font-semibold text-foreground">{formatMoney(receipt.fee)}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Total Debited</span>
-                <span className="font-bold text-foreground">{formatMoney(receipt.total_debited)}</span>
-              </div>
-              <div className="border-t border-border/40 pt-2 flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Reference</span>
                 <button
-                  onClick={() => copyRef(receipt.reference)}
+                  type="button"
+                  onClick={() => copyToClipboard(receipt.account_number, setCopiedAccount)}
+                  className="font-mono font-bold text-foreground flex items-center gap-1 hover:text-primary transition-colors"
+                >
+                  {receipt.account_number}
+                  {copiedAccount ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                </button>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Day, Date & Time</span>
+                <span className="font-medium text-foreground text-right text-[11px]">
+                  {formatReceiptDate(receipt.created_at)}
+                </span>
+              </div>
+
+              {receipt.session_id && (
+                <div className="border-t border-border/40 pt-2 flex justify-between items-center">
+                  <span className="text-muted-foreground">Session ID</span>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(receipt.session_id, setCopiedSessionId)}
+                    className="font-mono text-[11px] font-bold text-foreground flex items-center gap-1 hover:text-primary transition-colors max-w-[200px] truncate"
+                  >
+                    <span className="truncate">{receipt.session_id}</span>
+                    {copiedSessionId ? <Check className="h-3 w-3 text-emerald-500 shrink-0" /> : <Copy className="h-3 w-3 text-muted-foreground shrink-0" />}
+                  </button>
+                </div>
+              )}
+
+              <div className="border-t border-border/40 pt-2 flex justify-between items-center">
+                <span className="text-muted-foreground">Transaction Reference</span>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(receipt.reference, setCopiedRef)}
                   className="font-mono text-[11px] font-bold text-primary flex items-center gap-1 hover:underline"
                 >
                   {receipt.reference}
                   {copiedRef ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                 </button>
               </div>
+
+              {narration && (
+                <div className="border-t border-border/40 pt-2 flex justify-between items-center">
+                  <span className="text-muted-foreground">Narration</span>
+                  <span className="font-medium text-foreground text-right italic">{narration}</span>
+                </div>
+              )}
             </div>
 
-            <Button
-              className="mt-6 w-full rounded-xl h-11 font-bold shadow-md"
-              onClick={onClose}
-            >
-              Done
-            </Button>
+            {/* Compliance Note */}
+            <div className="mt-3 w-full rounded-xl bg-secondary/40 border border-border/40 p-2.5 text-left flex items-start gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Official transfer receipt generated by MELE DATA. Settlement processed via CBN-regulated Nigerian Inter-Bank Settlement channels.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-5 flex gap-2 w-full">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl h-11 font-semibold gap-1.5 text-xs"
+                onClick={() => {
+                  window.print();
+                }}
+              >
+                <Printer className="h-3.5 w-3.5" />
+                Print / Save
+              </Button>
+              <Button
+                className="flex-1 rounded-xl h-11 font-bold shadow-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
+                onClick={onClose}
+              >
+                Done
+              </Button>
+            </div>
           </div>
         ) : (
           /* 3. WITHDRAWAL FORM */
@@ -366,7 +501,7 @@ export function WithdrawModal({
                   Withdraw to Bank
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Instant Paystack transfer to any Nigerian bank
+                  Instant transfer to any Nigerian bank or fintech
                 </p>
               </div>
             </div>
@@ -388,6 +523,36 @@ export function WithdrawModal({
                 <label className="text-xs font-bold text-foreground mb-1.5 block">
                   Select Destination Bank
                 </label>
+
+                {/* Popular Bank Chips */}
+                <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
+                  {POPULAR_BANKS.map((b) => {
+                    const isSelected = selectedBank?.code === b.code;
+                    return (
+                      <button
+                        key={b.code}
+                        type="button"
+                        onClick={() => {
+                          const full = banks.find((item) => item.code === b.code) || {
+                            name: b.name,
+                            code: b.code,
+                          };
+                          setSelectedBank(full);
+                          setShowBankDropdown(false);
+                          setBankSearch('');
+                        }}
+                        className={`rounded-xl border px-2.5 py-1 text-[11px] font-bold transition-all shrink-0 ${
+                          isSelected
+                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                            : `${b.color} hover:opacity-80`
+                        }`}
+                      >
+                        {b.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <div className="relative">
                   <div
                     onClick={() => setShowBankDropdown(!showBankDropdown)}
@@ -445,16 +610,16 @@ export function WithdrawModal({
                 </div>
               </div>
 
-              {/* 10-Digit Account Number */}
+              {/* Account Number */}
               <div>
                 <label className="text-xs font-bold text-foreground mb-1.5 block">
-                  10-Digit Account Number
+                  Account Number
                 </label>
                 <div className="relative">
                   <Input
                     type="text"
                     inputMode="numeric"
-                    placeholder="0123456789"
+                    placeholder="Account Number"
                     maxLength={10}
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
@@ -512,30 +677,21 @@ export function WithdrawModal({
                     className="h-11 pl-8 font-extrabold text-base rounded-xl"
                   />
                 </div>
+              </div>
 
-                {/* Quick Amount Chips */}
-                <div className="flex gap-1.5 mt-2 overflow-x-auto pb-1">
-                  {[1000, 2000, 5000, 10000, 20000, 50000].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setAmount(String(val))}
-                      className="rounded-lg border border-border/70 bg-secondary/50 px-2 py-1 text-[11px] font-bold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors shrink-0"
-                    >
-                      +{formatMoney(val)}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const maxPossible = Math.max(0, Math.min(100000, walletBalance - 50));
-                      setAmount(String(Math.floor(maxPossible)));
-                    }}
-                    className="rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-bold text-primary hover:bg-primary hover:text-primary-foreground transition-colors shrink-0"
-                  >
-                    Max
-                  </button>
-                </div>
+              {/* Description / Narration */}
+              <div>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">
+                  Description / Narration (Optional)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="What is this transfer for? (Optional)"
+                  maxLength={50}
+                  value={narration}
+                  onChange={(e) => setNarration(e.target.value)}
+                  className="h-11 rounded-xl text-xs font-medium"
+                />
               </div>
 
               {/* Fee & Debit Summary */}
@@ -618,4 +774,3 @@ export function WithdrawModal({
     </div>
   );
 }
-
