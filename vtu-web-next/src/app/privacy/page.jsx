@@ -1,8 +1,8 @@
 import React from 'react';
 
 export const metadata = {
-  title: 'Privacy Policy | MELE DATA & MMTECHGLOBE',
-  description: 'Comprehensive Privacy Policy and Data Safety disclosures for MELE DATA, MZ DATA, KULLOMA DATA, and MMTECHGLOBE services.',
+  title: 'Privacy Policy | KULLOMA DATA & MMTECHGLOBE',
+  description: 'Comprehensive Privacy Policy and Data Safety disclosures for KULLOMA DATA, MELE DATA, MZ DATA, and MMTECHGLOBE services.',
 };
 
 export default function PrivacyPolicy() {

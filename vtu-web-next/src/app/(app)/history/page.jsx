@@ -13,9 +13,19 @@ export default function HistoryPage() {
   const [transactions, setTransactions] = useState([]);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return transactions.slice(start, start + itemsPerPage);
+  }, [transactions, currentPage]);
+
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+
+
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [txRes, reportRes] = await Promise.allSettled([
         apiFetch('/transactions/me'),
@@ -24,13 +34,25 @@ export default function HistoryPage() {
       if (txRes.status === 'fulfilled') setTransactions(Array.isArray(txRes.value) ? txRes.value : []);
       if (reportRes.status === 'fulfilled') setReports(Array.isArray(reportRes.value) ? reportRes.value : []);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     load().catch(() => {});
   }, [load]);
+
+  // Auto-refresh if there are pending transactions
+  useEffect(() => {
+    const hasPending = transactions.some((tx) => String(tx.status || '').toLowerCase() === 'pending');
+    if (!hasPending) return;
+
+    const interval = setInterval(() => {
+      load(true).catch(() => {});
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [transactions, load]);
 
   const summary = useMemo(() => {
     const success = transactions.filter((item) => String(item.status || '').toLowerCase() === 'success').length;
@@ -40,13 +62,14 @@ export default function HistoryPage() {
   }, [transactions]);
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="-mx-4 -my-5 min-h-[calc(100vh-40px)] bg-background px-4 py-5 text-foreground md:-mx-6 md:-my-5 md:px-6 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10">
+      <div className="space-y-6 pb-28 md:pb-8">
       <PageHeader
         eyebrow="History"
         title="Operations timeline"
         description="A compact audit trail for wallet funding, data purchases, and service activity."
         actions={(
-          <Button variant="secondary" onClick={() => load()}>
+          <Button variant="secondary" onClick={() => load()} className="border-white/10 bg-background/50 text-muted-foreground hover:bg-card hover:text-foreground backdrop-blur-sm">
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
@@ -59,56 +82,152 @@ export default function HistoryPage() {
           { label: 'Pending', value: String(summary.pending) },
           { label: 'Volume', value: `₦${formatMoney(summary.total)}` },
         ].map((item) => (
-          <Card key={item.label}>
-            <CardContent className="p-5">
-              <div className="axis-label">{item.label}</div>
-              <div className="mt-2 text-2xl font-semibold text-foreground">{item.value}</div>
-            </CardContent>
-          </Card>
+          <div key={item.label} className="group relative overflow-hidden rounded-[1.5rem] border border-border/40 bg-card/40 p-5 transition-all hover:bg-card/60 hover:shadow-md backdrop-blur-2xl shadow-lg">
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-[3rem] pointer-events-none" />
+            <div className="relative z-10 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground group-hover:text-primary transition-colors">{item.label}</div>
+            <div className="relative z-10 mt-2 text-3xl font-bold text-foreground">{item.value}</div>
+          </div>
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Transactions</CardTitle>
+      <Card className="relative overflow-hidden border border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl">
+        <CardHeader className="relative z-10">
+          <CardTitle className="text-xl font-bold tracking-tight">Transactions</CardTitle>
           <CardDescription>Latest movements from the backend timeline.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {loading ? <div className="text-sm text-muted-foreground">Loading history...</div> : null}
-          {transactions.length === 0 && !loading ? <div className="text-sm text-muted-foreground">No transactions yet.</div> : null}
-          {transactions.map((tx) => (
-            <div key={tx.reference || tx.id} className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-secondary p-4">
-              <div>
-                <div className="text-sm font-medium text-foreground">{String(tx.tx_type || 'Transaction').replace(/_/g, ' ')}</div>
-                <div className="mt-1 text-xs text-muted-foreground">{tx.reference || '—'} • {formatDateTime(tx.created_at)}</div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Badge tone={String(tx.status || '').toLowerCase() === 'success' ? 'success' : String(tx.status || '').toLowerCase() === 'failed' ? 'danger' : 'warning'}>{tx.status || 'pending'}</Badge>
-                <div className="text-sm font-semibold text-foreground">₦{formatMoney(tx.amount || 0)}</div>
-              </div>
+        <CardContent className="relative z-10">
+          {loading ? <div className="text-sm text-muted-foreground p-4">Loading history...</div> : null}
+          {transactions.length === 0 && !loading ? <div className="text-sm text-muted-foreground p-4">No transactions yet.</div> : null}
+          
+          {transactions.length > 0 && (
+            <div className="w-full overflow-x-auto pb-2">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs uppercase text-muted-foreground border-b border-border/50">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">#</th>
+                    <th className="px-4 py-3 font-semibold">Phone / Recipient</th>
+                    <th className="px-4 py-3 font-semibold">Capacity / Plan</th>
+                    <th className="px-4 py-3 font-semibold">Network</th>
+                    <th className="px-4 py-3 font-semibold">When</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold">Tx ID</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {paginatedTransactions.map((tx, idx) => {
+                    const isSuccess = tx.status === 'success' || tx.status === 'delivered';
+                    const isPending = tx.status === 'pending' || tx.status === 'processing';
+                    const statusColor = isSuccess ? 'text-emerald-500' : isPending ? 'text-amber-500' : 'text-red-500';
+                    const statusBg = isSuccess ? 'bg-emerald-500/10' : isPending ? 'bg-amber-500/10' : 'bg-red-500/10';
+                    
+                    const tType = String(tx.tx_type || '').toLowerCase();
+                    const meta = tx.meta || {};
+                    
+                    const recipient = tx.customer || tx.recipient_phone || meta.recipient_phone || meta.phone_number || meta.phone || meta.smartcard_number || meta.meter_number || '—';
+                    
+                    let capacity = '—';
+                    if (tType === 'data') {
+                      const rawPlan = String(meta.plan_name || meta.package_name || meta.description || tx.data_plan_code || meta.package_code || '');
+                      const match = rawPlan.match(/(\d+(?:\.\d+)?\s*(?:GB|MB|TB))/i);
+                      capacity = match ? match[1].toUpperCase().replace(/\s/g, '') : (rawPlan || '—');
+                    } else if (tType === 'cable') {
+                      capacity = meta.plan_name || meta.package_name || tx.data_plan_code || meta.package_code || '—';
+                    } else {
+                      capacity = `₦${formatMoney(tx.amount || 0)}`;
+                    }
+
+                    const network = (tx.network || meta.network || meta.provider || meta.disco || meta.exam || '—').toString().toUpperCase();
+                    let netColor = 'text-foreground';
+                    let netDot = 'bg-foreground';
+                    if (network === 'MTN') { netColor = 'text-yellow-500'; netDot = 'bg-yellow-500'; }
+                    else if (network === 'GLO') { netColor = 'text-green-500'; netDot = 'bg-green-500'; }
+                    else if (network === 'AIRTEL') { netColor = 'text-red-500'; netDot = 'bg-red-500'; }
+                    else if (network === '9MOBILE') { netColor = 'text-emerald-700'; netDot = 'bg-emerald-700'; }
+
+                    const d = new Date(tx.created_at || tx.timestamp);
+                    const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString("en-GB").replace(/\//g, '-') : '—';
+                    const timeStr = !isNaN(d.getTime()) ? d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }) : '';
+
+                    return (
+                      <tr key={tx.reference || tx.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-4 text-muted-foreground">{idx + 1}</td>
+                        <td className="px-4 py-4 font-bold text-foreground">{recipient}</td>
+                        <td className="px-4 py-4 font-bold text-foreground">{capacity}</td>
+                        <td className="px-4 py-4">
+                          {network !== '—' ? (
+                            <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-2.5 py-0.5 text-xs font-semibold shadow-sm">
+                              <div className={`h-1.5 w-1.5 rounded-full ${netDot}`} />
+                              <span className={netColor}>{network}</span>
+                            </div>
+                          ) : '—'}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="text-foreground">{dateStr}</div>
+                          <div className="text-xs text-muted-foreground">{timeStr}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${statusColor} ${statusBg}`}>
+                            {String(tx.status || 'pending')}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-xs font-mono text-muted-foreground">
+                          #{String(tx.reference || '').substring(0, 8)}...
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          ))}
+          )}
+          
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t border-border/30 px-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={currentPage === 1} 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className="bg-card hover:bg-secondary"
+              >
+                Previous
+              </Button>
+              <div className="text-sm font-medium text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={currentPage === totalPages} 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className="bg-card hover:bg-secondary"
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Reports</CardTitle>
+      <Card className="relative overflow-hidden border border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl mt-6">
+        <CardHeader className="relative z-10">
+          <CardTitle className="text-xl font-bold tracking-tight">Reports</CardTitle>
           <CardDescription>Service-level issue tracking and support history.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="relative z-10 space-y-4">
           {reports.length === 0 ? <div className="text-sm text-muted-foreground">No support reports yet.</div> : null}
           {reports.map((report) => (
-            <div key={report.id} className="rounded-2xl border border-border bg-secondary p-4">
+            <div key={report.id} className="rounded-[1.5rem] border border-white/5 bg-background/50 p-5">
               <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-medium text-foreground">Report #{report.id}</div>
-                <Badge tone={String(report.status || '').toLowerCase() === 'resolved' ? 'success' : 'warning'}>{report.status || 'open'}</Badge>
+                <div className="text-sm font-bold text-foreground/90 uppercase tracking-wide">Report #{report.id}</div>
+                <Badge className="px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-opacity-10 shadow-none border-transparent" tone={String(report.status || '').toLowerCase() === 'resolved' ? 'success' : 'warning'}>{report.status || 'open'}</Badge>
               </div>
-              <div className="mt-2 text-sm text-muted-foreground">{report.message || report.summary || 'Support report details available in backend.'}</div>
+              <div className="mt-3 text-[13px] leading-relaxed text-muted-foreground/80 bg-black/10 dark:bg-black/20 p-3 rounded-xl font-medium">{report.message || report.summary || 'Support report details available in backend.'}</div>
             </div>
           ))}
         </CardContent>
       </Card>
+    </div>
     </div>
   );
 }

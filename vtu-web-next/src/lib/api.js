@@ -404,6 +404,12 @@ export async function adminReconcileAgentCommissions() {
   });
 }
 
+export async function adminReconcileWelcomeBonuses() {
+  return apiFetch('/admin/settings/commissions/reconcile-welcome-bonus', {
+    method: 'POST',
+  });
+}
+
 export async function adminFundWallet(payload) {
   return apiFetch('/admin/fund-wallet', {
     method: 'POST',
@@ -609,3 +615,30 @@ export async function adminUpdateReferralCode(payload) {
     body: JSON.stringify(payload || {}),
   });
 }
+
+export async function adminGetDevelopers(params = {}) {
+  return apiFetch(`/admin/developers${toQuery(params)}`);
+}
+
+export async function adminResetDeveloperKeys(userId) {
+  return apiFetch(`/admin/developers/${userId}/reset-keys`, {
+    method: 'POST',
+  });
+}
+
+export async function adminUpdateDeveloperWebhook(userId, payload) {
+  return apiFetch(`/admin/developers/${userId}/webhook`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload || {}),
+  });
+}
+
+export async function adminRegisterDeveloper(payload) {
+  return apiFetch('/admin/developers/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload || {}),
+  });
+}
+

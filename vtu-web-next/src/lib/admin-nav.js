@@ -9,22 +9,34 @@ import {
   Users,
   ReceiptText,
   Gift,
+  Briefcase,
+  Award,
+  Ticket,
+  Plug,
+  Code2,
 } from 'lucide-react';
 
 export const adminNav = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Finance', href: '/admin/finance', icon: BadgeDollarSign },
   { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Agents', href: '/admin/agents', icon: Briefcase },
+  { label: 'Ambassadors', href: '/admin/ambassadors', icon: Award },
+  { label: 'API Resellers', href: '/admin/developers', icon: Code2 },
   { label: 'Transactions', href: '/admin/transactions', icon: ReceiptText },
   { label: 'Wallets', href: '/admin/wallets', icon: CircleDollarSign },
   { label: 'Services', href: '/admin/services', icon: Activity },
   { label: 'Data Plans', href: '/admin/data-plans', icon: PackageSearch },
   { label: 'Referrals', href: '/admin/referrals', icon: Gift },
+  { label: 'Promos', href: '/admin/promos', icon: Ticket },
+  { label: 'Integrations', href: '/admin/integrations', icon: Plug },
   { label: 'Support', href: '/admin/support', icon: Headset },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export const adminQuickLinks = [
   { label: 'Users', href: '/admin/users' },
+  { label: 'API Resellers', href: '/admin/developers' },
   { label: 'Transactions', href: '/admin/transactions' },
   { label: 'Support Inbox', href: '/admin/support' },
   { label: 'Settings', href: '/admin/settings' },

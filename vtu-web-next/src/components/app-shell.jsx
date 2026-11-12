@@ -8,6 +8,8 @@ import {
   Bell,
   CircleDollarSign,
   Clock3,
+  Code2,
+  BookOpen,
   GraduationCap,
   Gauge,
   Headphones,
@@ -30,12 +32,15 @@ import { clearAuth, apiFetch, getProfile, getToken, setProfile } from '@/lib/api
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { getActiveBrand } from '@/lib/brand';
+import { BrandLoader } from '@/components/brand-loader';
 
 function brandInitials(profile) {
-  const name = String(profile?.full_name || profile?.email || 'MELE DATA').trim();
+  const brand = getActiveBrand();
+  const name = String(profile?.full_name || profile?.email || brand.name).trim();
   const parts = name.split(/\s+/).filter(Boolean);
   const letters = parts.slice(0, 2).map((part) => part[0]).join('');
-  return (letters || 'AX').toUpperCase();
+  return (letters || 'KD').toUpperCase();
 }
 
 const mobilePrimaryMenu = [
@@ -48,14 +53,15 @@ const mobilePrimaryMenu = [
   { label: 'Wallet', href: '/wallet', icon: CircleDollarSign },
   { label: 'Referrals', href: '/referrals', icon: Users },
   { label: 'Transaction history', href: '/history', icon: Clock3 },
+  { label: 'Developer API', href: '/developer', icon: Code2 },
+  { label: 'Documentation', href: '/developer/docs', icon: BookOpen },
 ];
 
 const mobileSettingsMenu = [
   { label: 'Profile', href: '/profile', icon: UserCircle2 },
   { label: 'Security', href: '/profile#security', icon: ShieldCheck },
-  { label: 'Support', href: 'mailto:mmtechglobe@gmail.com', icon: Headphones, external: true },
+  { label: 'Support', href: '/support', icon: Headphones },
   { label: 'WhatsApp Channel', href: 'https://whatsapp.com/channel/0029VbCanujEawdvqLAYu83T', icon: Headphones, external: true },
-  { label: 'TikTok Page', href: 'https://www.tiktok.com/@meledata_ng', icon: Tv2, external: true },
 ];
 
 function MobileMenuLink({ item, activePath }) {
@@ -105,6 +111,40 @@ export function AppShell({ children }) {
   const [profile, setProfileState] = useState(getProfile());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState('light');
+  
+  const isAmbassador = profile?.role === 'ambassador' || profile?.role === 'admin';
+  const isAgent = profile?.role === 'agent' || isAmbassador;
+  const desktopNav = useMemo(() => {
+    const nav = [...appNav];
+    const insertIdx = nav.findIndex(n => n.label === 'Referrals');
+    if (isAmbassador) {
+      if (insertIdx !== -1) {
+        nav.splice(insertIdx + 1, 0, { label: 'Ambassador Hub', href: '/ambassador', icon: Users });
+      } else {
+        nav.push({ label: 'Ambassador Hub', href: '/ambassador', icon: Users });
+      }
+    }
+    if (isAgent) {
+      nav.push({ label: 'Agent Hub', href: '/agent', icon: Users });
+    }
+    return nav;
+  }, [isAmbassador, isAgent]);
+
+  const mobileNav = useMemo(() => {
+    const nav = [...mobilePrimaryMenu];
+    const insertIdx = nav.findIndex(n => n.label === 'Referrals');
+    if (isAmbassador) {
+      if (insertIdx !== -1) {
+        nav.splice(insertIdx + 1, 0, { label: 'Ambassador Hub', href: '/ambassador', icon: Users });
+      } else {
+        nav.push({ label: 'Ambassador Hub', href: '/ambassador', icon: Users });
+      }
+    }
+    if (isAgent) {
+      nav.push({ label: 'Agent Hub', href: '/agent', icon: Users });
+    }
+    return nav;
+  }, [isAmbassador, isAgent]);
 
   const handleSignOut = useCallback(() => {
     clearAuth();
@@ -172,13 +212,14 @@ export function AppShell({ children }) {
     });
   }, []);
 
+  const brand = getActiveBrand();
+
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
-        <div className="rounded-3xl border border-border bg-card px-6 py-5 text-sm text-card-foreground shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-          Loading MELE DATA dashboard...
-        </div>
-      </div>
+      <BrandLoader
+        message={`Loading ${brand.name}`}
+        subtitle="Synchronizing your account and wallet balance..."
+      />
     );
   }
 
@@ -189,16 +230,16 @@ export function AppShell({ children }) {
       <aside className="hidden border-r border-border bg-card p-5 text-card-foreground lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-y-auto">
         <Link href="/dashboard" className="flex items-center gap-3 rounded-2xl border border-border bg-secondary px-4 py-3">
           <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-card ring-1 ring-border">
-            <img src="/brand/axisvtu-icon.png" alt="MELE DATA logo" className="h-full w-full object-contain" />
+            <img src={brand.icon} alt={brand.name} className="h-full w-full object-contain rounded-xl" />
           </div>
           <div>
-            <div className="text-sm font-semibold text-foreground">MELE DATA</div>
-            <div className="text-xs text-muted-foreground">Fintech dashboard</div>
+            <div className="text-sm font-semibold text-foreground">{brand.name}</div>
+            <div className="text-xs text-muted-foreground">{brand.tagline}</div>
           </div>
         </Link>
 
         <nav className="mt-8 space-y-2">
-          {appNav.map((item) => {
+          {desktopNav.map((item) => {
             const Icon = item.icon;
             const active = activePath === item.href || activePath.startsWith(`${item.href}/`);
             if (item.external) {
@@ -275,10 +316,10 @@ export function AppShell({ children }) {
             </Button>
             <div className="min-w-0 flex-1 md:hidden">
               <div className="truncate text-sm font-semibold text-foreground">
-                {activePage?.label || 'MELE DATA'}
+                {activePage?.label || brand.name}
               </div>
               <div className="truncate text-[11px] text-muted-foreground">
-                MELE DATA
+                {brand.name}
               </div>
             </div>
             <div className="hidden h-11 flex-1 items-center gap-3 rounded-2xl border border-border bg-card px-4 md:flex">
@@ -374,10 +415,10 @@ export function AppShell({ children }) {
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-card ring-1 ring-border">
-                        <img src="/brand/axisvtu-icon.png" alt="MELE DATA logo" className="h-full w-full object-contain" />
+                        <img src={brand.icon} alt={brand.name} className="h-full w-full object-contain rounded-xl" />
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold tracking-tight text-foreground">MELE DATA</div>
+                        <div className="truncate text-sm font-semibold tracking-tight text-foreground">{brand.name}</div>
                         <div className="truncate text-[11px] text-muted-foreground">{profile.full_name || profile.email || 'Wallet workspace'}</div>
                       </div>
                     </div>
@@ -405,7 +446,7 @@ export function AppShell({ children }) {
               <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="axis-label mb-2">Menu</div>
                 <nav className="space-y-1">
-                  {mobilePrimaryMenu.map((item) => (
+                  {mobileNav.map((item) => (
                     <MobileMenuLink key={item.label} item={item} activePath={activePath} />
                   ))}
                 </nav>
@@ -425,11 +466,11 @@ export function AppShell({ children }) {
 
               <div className="shrink-0 border-t border-border bg-card p-3">
                 <Button
-                  variant="secondary"
-                  className="h-11 w-full justify-center border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 dark:border-rose-400/30 dark:bg-rose-500/12 dark:text-rose-100 dark:hover:bg-rose-500/18"
+                  variant="destructive"
+                  className="h-11 w-full justify-center"
                   onClick={handleSignOut}
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </Button>
               </div>

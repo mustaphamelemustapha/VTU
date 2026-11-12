@@ -326,3 +326,4 @@ export function LinkBvnNinModal({ open, onClose, onSuccess, prefillPhone = '' })
     </AnimatePresence>
   );
 }
+

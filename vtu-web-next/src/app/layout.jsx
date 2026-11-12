@@ -3,16 +3,16 @@ import { LegacyCacheCleanup } from '@/components/legacy-cache-cleanup';
 
 export const metadata = {
   title: {
-    default: 'MELE DATA',
+    default: 'MELE DATA | Instant VTU, Airtime & Utility Bills',
     template: '%s | MELE DATA',
   },
-  description: 'Premium fintech dashboard for MELE DATA',
+  description: 'Fast, reliable VTU payments for data, airtime, wallet funding, and everyday utility services.',
   applicationName: 'MELE DATA',
-  metadataBase: new URL('https://axisvtu.com'),
+  metadataBase: new URL('https://meledata.ng'),
   icons: {
-    icon: '/brand/axisvtu-icon.png',
-    shortcut: '/brand/axisvtu-icon.png',
-    apple: '/brand/axisvtu-icon.png',
+    icon: '/brand/meledata-icon-clean.png',
+    shortcut: '/brand/meledata-icon-clean.png',
+    apple: '/brand/meledata-icon-clean.png',
   },
 };
 

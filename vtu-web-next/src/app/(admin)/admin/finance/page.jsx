@@ -495,27 +495,28 @@ export default function FinancePage() {
           </h3>
         </div>
         <ul role="list" className="divide-y divide-gray-100 dark:divide-gray-800">
-          {(data.company_assets.providers || []).length === 0 ? (
+          {(data.company_assets.providers || []).filter(p => p.type !== 'ERROR' && !p.error).length === 0 ? (
             <li className="px-6 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
               No active providers are currently enabled.
             </li>
           ) : (
-            data.company_assets.providers.map((provider, index) => (
-              <li key={index} className="flex items-center justify-between gap-x-6 px-6 py-4">
-                <div className="min-w-0">
-                  <div className="flex items-start gap-x-3">
-                    <p className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">{provider.name}</p>
-                    <p className={`rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset ${provider.type === 'ERROR' ? 'bg-red-50 text-red-700 ring-red-600/20' : 'bg-green-50 text-green-700 ring-green-600/20'}`}>
-                      {provider.type}
-                    </p>
+            data.company_assets.providers
+              .filter(p => p.type !== 'ERROR' && !p.error)
+              .map((provider, index) => (
+                <li key={index} className="flex items-center justify-between gap-x-6 px-6 py-4">
+                  <div className="min-w-0">
+                    <div className="flex items-start gap-x-3">
+                      <p className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">{provider.name}</p>
+                      <p className="rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-green-50 text-green-700 ring-green-600/20">
+                        {provider.type}
+                      </p>
+                    </div>
                   </div>
-                  {provider.error && <p className="mt-1 truncate text-xs leading-5 text-red-500">{provider.error}</p>}
-                </div>
-                <div className="flex flex-none items-center gap-x-4">
-                  <p className="text-sm font-medium leading-6 text-gray-900 dark:text-white">{formatCurrency(provider.balance)}</p>
-                </div>
-              </li>
-            ))
+                  <div className="flex flex-none items-center gap-x-4">
+                    <p className="text-sm font-medium leading-6 text-gray-900 dark:text-white">{formatCurrency(provider.balance)}</p>
+                  </div>
+                </li>
+              ))
           )}
         </ul>
       </div>

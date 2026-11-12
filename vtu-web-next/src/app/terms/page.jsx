@@ -1,8 +1,8 @@
 import React from 'react';
 
 export const metadata = {
-  title: 'Terms & Conditions | MELE DATA & MMTECHGLOBE',
-  description: 'Terms and Conditions of Service for MELE DATA, MZ DATA, KULLOMA DATA applications and MMTECHGLOBE web portal.',
+  title: 'Terms & Conditions | KULLOMA DATA & MMTECHGLOBE',
+  description: 'Terms and Conditions of Service for KULLOMA DATA, MELE DATA, MZ DATA applications and MMTECHGLOBE web portal.',
 };
 
 export default function TermsAndConditions() {
