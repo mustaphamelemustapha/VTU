@@ -1,10 +1,14 @@
 import { Suspense } from 'react';
 import { ResetPinPage } from '@/components/reset-pin-page';
+import { resolveServerBrand } from '@/lib/server-brand';
 
-export const metadata = {
-  title: 'Reset Transaction PIN | MELE DATA',
-  description: 'Create a new transaction PIN for your MELE DATA account.',
-};
+export function generateMetadata() {
+  const brand = resolveServerBrand();
+  return {
+    title: `Reset Transaction PIN | ${brand.name}`,
+    description: `Create a new transaction PIN for your ${brand.name} account.`,
+  };
+}
 
 export default function Page() {
   return (
